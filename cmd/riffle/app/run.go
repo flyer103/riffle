@@ -1,31 +1,24 @@
-package riffle
+package app
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/flyer103/riffle/pkg/riffle"
+	"github.com/spf13/cobra"
 )
 
-// Run starts the riffle application
-func Run() error {
-	opmlFile := flag.String("opml", "", "Path to OPML file")
-	interestsFile := flag.String("interests", "", "Path to file containing interests (one per line)")
-	flag.Parse()
-
-	if *opmlFile == "" {
-		return fmt.Errorf("OPML file path is required")
-	}
-
-	feeds, err := ParseOPML(*opmlFile)
+func runRiffle(cmd *cobra.Command, args []string) error {
+	feeds, err := riffle.ParseOPML(opmlFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse OPML file: %w", err)
 	}
 
-	analyzer, err := NewContentAnalyzer(*interestsFile)
+	analyzer, err := riffle.NewContentAnalyzer(interestsFile)
 	if err != nil {
 		return fmt.Errorf("failed to initialize content analyzer: %w", err)
 	}
@@ -33,20 +26,20 @@ func Run() error {
 	ctx := context.Background()
 
 	// Store all article scores for final recommendation
-	var allScores []ArticleScore
+	var allScores []riffle.ArticleScore
 
 	for _, feed := range feeds {
 		fmt.Printf("\nFeed: %s (%s)\n", feed.Title, feed.URL)
 		fmt.Println(strings.Repeat("-", 80))
 
-		articles, err := FetchLatestArticles(ctx, feed.URL, 3)
+		articles, err := riffle.FetchLatestArticles(ctx, feed.URL, 3)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error fetching articles from %s: %v\n", feed.URL, err)
 			continue
 		}
 
 		// Analyze and score each article
-		var feedScores []ArticleScore
+		var feedScores []riffle.ArticleScore
 		for _, article := range articles {
 			score, err := analyzer.AnalyzeArticle(&article)
 			if err != nil {
