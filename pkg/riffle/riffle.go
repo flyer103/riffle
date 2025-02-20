@@ -13,6 +13,7 @@ import (
 // Run starts the riffle application
 func Run() error {
 	opmlFile := flag.String("opml", "", "Path to OPML file")
+	interestsFile := flag.String("interests", "", "Path to file containing interests (one per line)")
 	flag.Parse()
 
 	if *opmlFile == "" {
@@ -24,7 +25,11 @@ func Run() error {
 		return fmt.Errorf("failed to parse OPML file: %w", err)
 	}
 
-	analyzer := NewContentAnalyzer()
+	analyzer, err := NewContentAnalyzer(*interestsFile)
+	if err != nil {
+		return fmt.Errorf("failed to initialize content analyzer: %w", err)
+	}
+
 	ctx := context.Background()
 
 	// Store all article scores for final recommendation
@@ -54,7 +59,10 @@ func Run() error {
 			fmt.Printf("\nTitle: %s\n", article.Title)
 			fmt.Printf("Published: %s\n", article.PublishedAt.Format(time.RFC3339))
 			fmt.Printf("Summary: %s\n", article.Summary)
-			fmt.Printf("Value Score: %.2f\n", score.Score)
+			fmt.Printf("Scores:\n")
+			fmt.Printf("  - Interest Match: %.2f\n", score.InterestScore)
+			fmt.Printf("  - Content Quality: %.2f\n", score.ContentScore)
+			fmt.Printf("  - Overall: %.2f\n", score.Score)
 		}
 
 		// Print the highest-value article for this feed
@@ -62,8 +70,11 @@ func Run() error {
 			sort.Slice(feedScores, func(i, j int) bool {
 				return feedScores[i].Score > feedScores[j].Score
 			})
-			fmt.Printf("\nHighest Value Article in this feed: %s (Score: %.2f)\n",
-				feedScores[0].Article.Title, feedScores[0].Score)
+			fmt.Printf("\nHighest Value Article in this feed: %s\n", feedScores[0].Article.Title)
+			fmt.Printf("Scores:\n")
+			fmt.Printf("  - Interest Match: %.2f\n", feedScores[0].InterestScore)
+			fmt.Printf("  - Content Quality: %.2f\n", feedScores[0].ContentScore)
+			fmt.Printf("  - Overall: %.2f\n", feedScores[0].Score)
 		}
 
 		fmt.Println(strings.Repeat("-", 80))
@@ -77,9 +88,12 @@ func Run() error {
 
 		fmt.Printf("\n🌟 OVERALL HIGHEST VALUE ARTICLE RECOMMENDATION 🌟\n")
 		fmt.Printf("Title: %s\n", allScores[0].Article.Title)
-		fmt.Printf("Score: %.2f\n", allScores[0].Score)
-		fmt.Printf("Summary: %s\n", allScores[0].Article.Summary)
 		fmt.Printf("Published: %s\n", allScores[0].Article.PublishedAt.Format(time.RFC3339))
+		fmt.Printf("Summary: %s\n", allScores[0].Article.Summary)
+		fmt.Printf("Scores:\n")
+		fmt.Printf("  - Interest Match: %.2f\n", allScores[0].InterestScore)
+		fmt.Printf("  - Content Quality: %.2f\n", allScores[0].ContentScore)
+		fmt.Printf("  - Overall: %.2f\n", allScores[0].Score)
 	}
 
 	return nil

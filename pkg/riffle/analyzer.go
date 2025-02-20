@@ -1,7 +1,9 @@
 package riffle
 
 import (
+	"bufio"
 	"html"
+	"os"
 	"strings"
 	"unicode/utf8"
 
@@ -10,19 +12,23 @@ import (
 
 // ArticleScore represents the analyzed value of an article
 type ArticleScore struct {
-	Article *Article
-	Score   float64
+	Article       *Article
+	Score         float64
+	InterestScore float64 // Score based on user interests
+	ContentScore  float64 // Score based on content quality
 }
 
 // ContentAnalyzer analyzes article content and scores it
 type ContentAnalyzer struct {
 	// Keywords that indicate valuable content
 	valueKeywords []string
+	// User's current interests
+	interests []string
 }
 
 // NewContentAnalyzer creates a new ContentAnalyzer
-func NewContentAnalyzer() *ContentAnalyzer {
-	return &ContentAnalyzer{
+func NewContentAnalyzer(interestsFile string) (*ContentAnalyzer, error) {
+	analyzer := &ContentAnalyzer{
 		valueKeywords: []string{
 			"research", "study", "analysis", "guide", "tutorial",
 			"introduction", "review", "comparison", "best practices",
@@ -30,6 +36,29 @@ func NewContentAnalyzer() *ContentAnalyzer {
 			"performance", "security", "scalability",
 		},
 	}
+
+	// Load interests if file is provided
+	if interestsFile != "" {
+		file, err := os.Open(interestsFile)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			interest := strings.TrimSpace(scanner.Text())
+			if interest != "" {
+				analyzer.interests = append(analyzer.interests, interest)
+			}
+		}
+
+		if err := scanner.Err(); err != nil {
+			return nil, err
+		}
+	}
+
+	return analyzer, nil
 }
 
 // AnalyzeArticle scores an article based on various factors
@@ -47,18 +76,57 @@ func (ca *ContentAnalyzer) AnalyzeArticle(article *Article) (ArticleScore, error
 		return ArticleScore{Article: article}, err
 	}
 
-	// Calculate various scores
+	// Calculate content quality scores
 	textScore := ca.calculateTextScore(doc)
 	keywordScore := ca.calculateKeywordScore(doc.Text())
 	linkScore := ca.calculateLinkScore(doc)
 
-	// Combine scores with weights
-	totalScore := (textScore * 0.4) + (keywordScore * 0.4) + (linkScore * 0.2)
+	// Calculate interest relevance score
+	interestScore := ca.calculateInterestScore(article.Title + " " + doc.Text())
+
+	// Combine content quality scores (50% weight)
+	contentScore := (textScore * 0.4) + (keywordScore * 0.4) + (linkScore * 0.2)
+
+	// Final score is 50% interest relevance and 50% content quality
+	totalScore := (interestScore * 0.5) + (contentScore * 0.5)
 
 	return ArticleScore{
-		Article: article,
-		Score:   totalScore,
+		Article:       article,
+		Score:         totalScore,
+		InterestScore: interestScore,
+		ContentScore:  contentScore,
 	}, nil
+}
+
+// calculateInterestScore evaluates how well the content matches user interests
+func (ca *ContentAnalyzer) calculateInterestScore(text string) float64 {
+	if len(ca.interests) == 0 {
+		return 0.5 // Neutral score if no interests defined
+	}
+
+	text = strings.ToLower(text)
+	var matchCount int
+
+	for _, interest := range ca.interests {
+		// Split interest into words for more flexible matching
+		interestWords := strings.Fields(strings.ToLower(interest))
+
+		// Count how many words from this interest appear in the text
+		wordMatches := 0
+		for _, word := range interestWords {
+			if strings.Contains(text, word) {
+				wordMatches++
+			}
+		}
+
+		// Consider it a match if more than half of the words match
+		if float64(wordMatches) >= float64(len(interestWords))*0.5 {
+			matchCount++
+		}
+	}
+
+	// Score based on the proportion of matching interests
+	return float64(matchCount) / float64(len(ca.interests))
 }
 
 // calculateTextScore evaluates the quality of the text content
