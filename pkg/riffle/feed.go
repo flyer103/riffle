@@ -12,6 +12,7 @@ import (
 type Article struct {
 	Title       string
 	Summary     string
+	Content     string // Full content of the article
 	PublishedAt time.Time
 }
 
@@ -37,9 +38,16 @@ func FetchLatestArticles(ctx context.Context, feedURL string, n int) ([]Article,
 			pubDate = time.Now() // fallback to current time if no date available
 		}
 
+		// Get the full content if available, otherwise use description
+		content := item.Content
+		if content == "" {
+			content = item.Description
+		}
+
 		articles = append(articles, Article{
 			Title:       item.Title,
 			Summary:     item.Description,
+			Content:     content,
 			PublishedAt: pubDate,
 		})
 	}
