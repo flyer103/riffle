@@ -2,6 +2,12 @@
 
 Riffle is an RSS feed analyzer and content recommender that helps you find the most valuable content from your RSS subscriptions. It analyzes articles based on content quality and your personal interests to provide intelligent recommendations.
 
+## Screenshot
+
+![Riffle in action](docs/images/effect.png)
+
+Example output showing article recommendations with interest matching and content quality scores.
+
 ## Features
 
 - OPML feed list support
