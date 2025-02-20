@@ -125,22 +125,6 @@ Available platforms:
 - darwin/amd64
 - darwin/arm64
 
-### Project Structure
-
-```
-.
-├── cmd/
-│   └── riffle/
-│       ├── app/        # Command-line interface
-│       └── main.go     # Application entry point
-├── pkg/
-│   └── riffle/         # Core functionality
-│       ├── analyzer.go # Content analysis
-│       ├── feed.go     # Feed processing
-│       └── opml.go     # OPML parsing
-└── build/              # Build scripts
-```
-
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details. 
