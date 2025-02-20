@@ -1,0 +1,98 @@
+
+Feed: Hacker News (https://news.ycombinator.com/rss)
+--------------------------------------------------------------------------------
+
+Title: After 20 Years, Math Couple Solves Major Group Theory Problem
+Published: 2025-02-20T10:09:56Z
+Summary: <a href="https://news.ycombinator.com/item?id=43113024">Comments</a>
+Scores:
+  - Interest Match: 0.00
+  - Content Quality: 0.28
+  - Overall: 0.14
+
+Title: Helix: A Vision-Language-Action Model for Generalist Humanoid Control
+Published: 2025-02-20T14:30:54Z
+Summary: <a href="https://news.ycombinator.com/item?id=43115079">Comments</a>
+Scores:
+  - Interest Match: 0.00
+  - Content Quality: 0.28
+  - Overall: 0.14
+
+Title: RT64: N64 graphics renderer in emulators and native ports
+Published: 2025-02-20T13:26:17Z
+Summary: <a href="https://news.ycombinator.com/item?id=43114362">Comments</a>
+Scores:
+  - Interest Match: 0.00
+  - Content Quality: 0.28
+  - Overall: 0.14
+
+Top 2 Articles in this feed:
+1. After 20 Years, Math Couple Solves Major Group Theory Problem
+   Scores:
+   - Interest Match: 0.00
+   - Content Quality: 0.28
+   - Overall: 0.14
+2. Helix: A Vision-Language-Action Model for Generalist Humanoid Control
+   Scores:
+   - Interest Match: 0.00
+   - Content Quality: 0.28
+   - Overall: 0.14
+--------------------------------------------------------------------------------
+
+Feed: The Go Blog (https://go.dev/blog/feed.atom)
+--------------------------------------------------------------------------------
+
+Title: Testing concurrent code with testing/synctest
+Published: 2025-02-19T00:00:00Z
+Summary: Go 1.24 contains an experimental package to aid in testing concurrent code.
+Scores:
+  - Interest Match: 0.17
+  - Content Quality: 0.44
+  - Overall: 0.30
+
+Title: Extensible Wasm Applications with Go
+Published: 2025-02-13T00:00:00Z
+Summary: Go 1.24 enhances WebAssembly capabilities with function export and reactor mode
+Scores:
+  - Interest Match: 0.67
+  - Content Quality: 0.56
+  - Overall: 0.61
+
+Title: Go 1.24 is released!
+Published: 2025-02-11T00:00:00Z
+Summary: Go 1.24 brings generic type aliases, map performance improvements, FIPS 140 compliance and more.
+Scores:
+  - Interest Match: 0.50
+  - Content Quality: 0.44
+  - Overall: 0.47
+
+Top 2 Articles in this feed:
+1. Extensible Wasm Applications with Go
+   Scores:
+   - Interest Match: 0.67
+   - Content Quality: 0.56
+   - Overall: 0.61
+2. Go 1.24 is released!
+   Scores:
+   - Interest Match: 0.50
+   - Content Quality: 0.44
+   - Overall: 0.47
+--------------------------------------------------------------------------------
+
+🌟 OVERALL TOP 2 ARTICLE RECOMMENDATIONS 🌟
+
+1. Extensible Wasm Applications with Go
+Published: 2025-02-13T00:00:00Z
+Summary: Go 1.24 enhances WebAssembly capabilities with function export and reactor mode
+Scores:
+  - Interest Match: 0.67
+  - Content Quality: 0.56
+  - Overall: 0.61
+
+2. Go 1.24 is released!
+Published: 2025-02-11T00:00:00Z
+Summary: Go 1.24 brings generic type aliases, map performance improvements, FIPS 140 compliance and more.
+Scores:
+  - Interest Match: 0.50
+  - Content Quality: 0.44
+  - Overall: 0.47
