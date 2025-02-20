@@ -32,7 +32,7 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 		fmt.Printf("\nFeed: %s (%s)\n", feed.Title, feed.URL)
 		fmt.Println(strings.Repeat("-", 80))
 
-		articles, err := riffle.FetchLatestArticles(ctx, feed.URL, 3)
+		articles, err := riffle.FetchLatestArticles(ctx, feed.URL, articleCount)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error fetching articles from %s: %v\n", feed.URL, err)
 			continue
@@ -58,35 +58,43 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  - Overall: %.2f\n", score.Score)
 		}
 
-		// Print the highest-value article for this feed
+		// Print the highest-value articles for this feed
 		if len(feedScores) > 0 {
 			sort.Slice(feedScores, func(i, j int) bool {
 				return feedScores[i].Score > feedScores[j].Score
 			})
-			fmt.Printf("\nHighest Value Article in this feed: %s\n", feedScores[0].Article.Title)
-			fmt.Printf("Scores:\n")
-			fmt.Printf("  - Interest Match: %.2f\n", feedScores[0].InterestScore)
-			fmt.Printf("  - Content Quality: %.2f\n", feedScores[0].ContentScore)
-			fmt.Printf("  - Overall: %.2f\n", feedScores[0].Score)
+
+			fmt.Printf("\nTop %d Articles in this feed:\n", topCount)
+			for i := 0; i < len(feedScores) && i < topCount; i++ {
+				score := feedScores[i]
+				fmt.Printf("%d. %s\n", i+1, score.Article.Title)
+				fmt.Printf("   Scores:\n")
+				fmt.Printf("   - Interest Match: %.2f\n", score.InterestScore)
+				fmt.Printf("   - Content Quality: %.2f\n", score.ContentScore)
+				fmt.Printf("   - Overall: %.2f\n", score.Score)
+			}
 		}
 
 		fmt.Println(strings.Repeat("-", 80))
 	}
 
-	// Print overall highest-value article recommendation
+	// Print overall highest-value article recommendations
 	if len(allScores) > 0 {
 		sort.Slice(allScores, func(i, j int) bool {
 			return allScores[i].Score > allScores[j].Score
 		})
 
-		fmt.Printf("\n🌟 OVERALL HIGHEST VALUE ARTICLE RECOMMENDATION 🌟\n")
-		fmt.Printf("Title: %s\n", allScores[0].Article.Title)
-		fmt.Printf("Published: %s\n", allScores[0].Article.PublishedAt.Format(time.RFC3339))
-		fmt.Printf("Summary: %s\n", allScores[0].Article.Summary)
-		fmt.Printf("Scores:\n")
-		fmt.Printf("  - Interest Match: %.2f\n", allScores[0].InterestScore)
-		fmt.Printf("  - Content Quality: %.2f\n", allScores[0].ContentScore)
-		fmt.Printf("  - Overall: %.2f\n", allScores[0].Score)
+		fmt.Printf("\n🌟 OVERALL TOP %d ARTICLE RECOMMENDATIONS 🌟\n", topCount)
+		for i := 0; i < len(allScores) && i < topCount; i++ {
+			score := allScores[i]
+			fmt.Printf("\n%d. %s\n", i+1, score.Article.Title)
+			fmt.Printf("Published: %s\n", score.Article.PublishedAt.Format(time.RFC3339))
+			fmt.Printf("Summary: %s\n", score.Article.Summary)
+			fmt.Printf("Scores:\n")
+			fmt.Printf("  - Interest Match: %.2f\n", score.InterestScore)
+			fmt.Printf("  - Content Quality: %.2f\n", score.ContentScore)
+			fmt.Printf("  - Overall: %.2f\n", score.Score)
+		}
 	}
 
 	return nil

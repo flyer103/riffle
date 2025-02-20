@@ -10,6 +10,8 @@ import (
 var (
 	opmlFile      string
 	interestsFile string
+	articleCount  int
+	topCount      int
 )
 
 // NewRiffleCommand creates the root command for riffle
@@ -26,6 +28,8 @@ valuable content from your RSS subscriptions.`,
 	// Add flags
 	cmd.Flags().StringVarP(&opmlFile, "opml", "o", "", "Path to OPML file (required)")
 	cmd.Flags().StringVarP(&interestsFile, "interests", "i", "", "Path to file containing interests (one per line)")
+	cmd.Flags().IntVarP(&articleCount, "articles", "n", 3, "Number of articles to fetch from each feed")
+	cmd.Flags().IntVarP(&topCount, "top", "t", 1, "Number of top articles to recommend")
 
 	// Mark required flags
 	cmd.MarkFlagRequired("opml")
