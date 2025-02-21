@@ -23,6 +23,29 @@ make
 
 This will create the binary in `bin/<os>_<arch>/riffle`.
 
+### Docker
+
+To build and run using Docker:
+
+```bash
+# Build the image
+docker build -t riffle .
+
+# Run with your configuration files
+docker run --rm \
+          -v "$(pwd)/conf/feeds.opml:/app/conf/feeds.opml:ro" \
+          -v "$(pwd)/conf/interests.txt:/app/conf/interests.txt:ro" \
+          -e OPENAI_API_KEY="your-api-key" \
+          riffle -o /app/conf/feeds.opml -i /app/conf/interests.txt
+
+# Or run with custom parameters
+docker run --rm \
+          -v "$(pwd)/conf/feeds.opml:/app/conf/feeds.opml:ro" \
+          -v "$(pwd)/conf/interests.txt:/app/conf/interests.txt:ro" \
+          -e OPENAI_API_KEY="your-api-key" \
+          riffle -o /app/conf/feeds.opml -i /app/conf/interests.txt -n 5 -t 3 -m "custom-model"
+```
+
 ## Environment Variables
 
 The following environment variables are required for AI analysis functionality:
