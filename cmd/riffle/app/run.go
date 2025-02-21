@@ -56,6 +56,10 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 	// Track feeds without recent updates
 	var noUpdateFeeds []string
 
+	// Print feed articles
+	fmt.Printf("\n📰 ARTICLES FROM THE LAST 2 DAYS\n")
+	fmt.Println(strings.Repeat("=", 80))
+
 	for _, feed := range feeds {
 		articles, err := riffle.FetchLatestArticles(ctx, feed.URL, articleCount)
 		if err != nil {
@@ -69,46 +73,23 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		fmt.Printf("\nFeed: %s (%s)\n", feed.Title, feed.URL)
+		fmt.Printf("\nFeed: %s\n", feed.Title)
 		fmt.Println(strings.Repeat("-", 80))
 
 		// Analyze and score each article
-		var feedScores []riffle.ArticleScore
 		for _, article := range articles {
 			score, err := analyzer.AnalyzeArticle(&article)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error analyzing article '%s': %v\n", article.Title, err)
 				continue
 			}
-			feedScores = append(feedScores, score)
 			allScores = append(allScores, score)
 
 			fmt.Printf("\nTitle: %s\n", article.Title)
 			fmt.Printf("URL: %s\n", article.URL)
 			fmt.Printf("Published: %s\n", article.PublishedAt.Format(time.RFC3339))
-			fmt.Printf("Summary: %s\n", article.Summary)
-			fmt.Printf("Scores:\n")
-			fmt.Printf("  - Interest Match: %.2f\n", score.InterestScore)
-			fmt.Printf("  - Content Quality: %.2f\n", score.ContentScore)
-			fmt.Printf("  - Overall: %.2f\n", score.Score)
-		}
-
-		// Print the highest-value articles for this feed
-		if len(feedScores) > 0 {
-			sort.Slice(feedScores, func(i, j int) bool {
-				return feedScores[i].Score > feedScores[j].Score
-			})
-
-			fmt.Printf("\nTop %d Articles in this feed:\n", topCount)
-			for i := 0; i < len(feedScores) && i < topCount; i++ {
-				score := feedScores[i]
-				fmt.Printf("%d. %s\n", i+1, score.Article.Title)
-				fmt.Printf("   URL: %s\n", score.Article.URL)
-				fmt.Printf("   Scores:\n")
-				fmt.Printf("   - Interest Match: %.2f\n", score.InterestScore)
-				fmt.Printf("   - Content Quality: %.2f\n", score.ContentScore)
-				fmt.Printf("   - Overall: %.2f\n", score.Score)
-				fmt.Printf("   Why recommended: %s\n", generateRecommendationReason(score))
+			if article.Summary != "" {
+				fmt.Printf("Summary: %s\n", article.Summary)
 			}
 		}
 
@@ -131,22 +112,37 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 			return allScores[i].Score > allScores[j].Score
 		})
 
-		fmt.Printf("\n🌟 OVERALL TOP %d ARTICLE RECOMMENDATIONS 🌟\n", topCount)
+		fmt.Printf("\n🌟 MOST VALUABLE ARTICLES ACROSS ALL SOURCES 🌟\n")
+		fmt.Println(strings.Repeat("=", 80))
 		for i := 0; i < len(allScores) && i < topCount; i++ {
 			score := allScores[i]
 			fmt.Printf("\n%d. %s\n", i+1, score.Article.Title)
+			fmt.Printf("Source: %s\n", getFeedTitleByURL(feeds, score.Article.URL))
 			fmt.Printf("URL: %s\n", score.Article.URL)
 			fmt.Printf("Published: %s\n", score.Article.PublishedAt.Format(time.RFC3339))
-			fmt.Printf("Summary: %s\n", score.Article.Summary)
+			if score.Article.Summary != "" {
+				fmt.Printf("Summary: %s\n", score.Article.Summary)
+			}
 			fmt.Printf("Scores:\n")
 			fmt.Printf("  - Interest Match: %.2f\n", score.InterestScore)
 			fmt.Printf("  - Content Quality: %.2f\n", score.ContentScore)
 			fmt.Printf("  - Overall: %.2f\n", score.Score)
 			fmt.Printf("Why recommended: %s\n", generateRecommendationReason(score))
 		}
+		fmt.Println(strings.Repeat("=", 80))
 	} else {
 		fmt.Printf("\n⚠️ No articles found from the last 2 days in any feed.\n")
 	}
 
 	return nil
+}
+
+// getFeedTitleByURL returns the feed title for a given article URL
+func getFeedTitleByURL(feeds []riffle.Feed, articleURL string) string {
+	for _, feed := range feeds {
+		if strings.Contains(articleURL, strings.TrimRight(feed.URL, "/feed.xml/feed.atom/rss")) {
+			return feed.Title
+		}
+	}
+	return "Unknown Source"
 }
