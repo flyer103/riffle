@@ -51,7 +51,7 @@ This will create the binary in `bin/<os>_<arch>/riffle`.
 Basic usage:
 
 ```bash
-riffle -o <opml-file> [-i <interests-file>] [-n <article-count>] [-t <top-count>]
+riffle -o <opml-file> [-i <interests-file>] [-n <article-count>] [-t <top-count>] [-m <model-name>]
 ```
 
 ### Command Line Options
@@ -62,10 +62,11 @@ riffle -o <opml-file> [-i <interests-file>] [-n <article-count>] [-t <top-count>
 | `--interests` | `-i` | Path to file containing interests (one per line) | - |
 | `--articles` | `-n` | Number of articles to fetch from each feed (from last 2 days) | 3 |
 | `--top` | `-t` | Number of most valuable articles to recommend | 1 |
+| `--model` | `-m` | Perplexity API model to use for article analysis | r1-1776 |
 
 ### Output Format
 
-The tool provides output in three main sections:
+The tool provides output in four main sections:
 
 1. **Recent Articles** (📰)
    - Lists all articles from the last 2 days, grouped by RSS source
@@ -84,6 +85,9 @@ The tool provides output in three main sections:
      * Overall Score (0.00-1.00)
      * Explanation of why the article was recommended
 
+4. **AI Analysis** (📊)
+   - Provides in-depth analysis of recommended articles using Perplexity AI
+
 ### Examples
 
 1. Basic usage with default settings:
@@ -94,6 +98,7 @@ The tool provides output in three main sections:
    - Process articles from the last 2 days
    - Fetch up to 3 articles per feed
    - Show 1 most valuable article recommendation
+   - Use default AI model for analysis
 
 2. Include personal interests for better recommendations:
    ```bash
@@ -103,15 +108,17 @@ The tool provides output in three main sections:
    - Match articles against your interests
    - Improve recommendation quality
    - Show interest match scores
+   - Include AI analysis of top articles
 
-3. Get more recommendations:
+3. Get more recommendations with custom model:
    ```bash
-   riffle -o feeds.opml -i interests.txt -t 3
+   riffle -o feeds.opml -i interests.txt -t 3 -m "custom-model"
    ```
    This will:
    - Show the top 3 most valuable articles
    - Rank them by overall score
    - Include detailed reasoning for each
+   - Use specified AI model for analysis
 
 4. Fetch more articles per feed:
    ```bash
@@ -121,6 +128,7 @@ The tool provides output in three main sections:
    - Fetch up to 5 articles per feed (from last 2 days)
    - Process more content for better selection
    - Still respect the 2-day time window
+   - Include AI analysis of recommendations
 
 Note: Articles are always filtered to the last 2 days in your current time zone, regardless of how many articles you request with `-n`. This ensures you only see recent, relevant content.
 

@@ -38,6 +38,14 @@ func generateRecommendationReason(score riffle.ArticleScore) string {
 	return strings.Join(reasons, ", ")
 }
 
+// cleanAIAnalysis removes content before </think> if present
+func cleanAIAnalysis(content string) string {
+	if idx := strings.Index(content, "</think>"); idx != -1 {
+		return strings.TrimSpace(content[idx+8:]) // 8 is length of </think>
+	}
+	return content
+}
+
 func runRiffle(cmd *cobra.Command, args []string) error {
 	feeds, err := riffle.ParseOPML(opmlFile)
 	if err != nil {
@@ -136,7 +144,7 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 				continue
 			}
 
-			fmt.Printf("\n📊 AI Analysis:\n%s\n", analysis.Content)
+			fmt.Printf("\n📊 AI Analysis:\n%s\n", cleanAIAnalysis(analysis.Content))
 		}
 		fmt.Println(strings.Repeat("=", 80))
 	} else {
