@@ -207,6 +207,11 @@ func AnalyzeWithPerplexity(article *Article, model string) (*PerplexityAnalysis,
 		return nil, fmt.Errorf("OPENAI_API_KEY environment variable not set")
 	}
 
+	baseURL := os.Getenv("OPENAI_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://api.perplexity.ai"
+	}
+
 	client := &http.Client{}
 	prompt := fmt.Sprintf("Analyze this article and provide: 1) A concise summary 2) Key points 3) Why it's significant\n\nTitle: %s\nContent: %s",
 		article.Title,
@@ -231,7 +236,7 @@ func AnalyzeWithPerplexity(article *Article, model string) (*PerplexityAnalysis,
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", "https://api.perplexity.ai/chat/completions", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", baseURL+"/chat/completions", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
