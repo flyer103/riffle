@@ -50,6 +50,7 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 			allScores = append(allScores, score)
 
 			fmt.Printf("\nTitle: %s\n", article.Title)
+			fmt.Printf("URL: %s\n", article.URL)
 			fmt.Printf("Published: %s\n", article.PublishedAt.Format(time.RFC3339))
 			fmt.Printf("Summary: %s\n", article.Summary)
 			fmt.Printf("Scores:\n")
@@ -68,6 +69,7 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 			for i := 0; i < len(feedScores) && i < topCount; i++ {
 				score := feedScores[i]
 				fmt.Printf("%d. %s\n", i+1, score.Article.Title)
+				fmt.Printf("   URL: %s\n", score.Article.URL)
 				fmt.Printf("   Scores:\n")
 				fmt.Printf("   - Interest Match: %.2f\n", score.InterestScore)
 				fmt.Printf("   - Content Quality: %.2f\n", score.ContentScore)
@@ -88,6 +90,7 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 		for i := 0; i < len(allScores) && i < topCount; i++ {
 			score := allScores[i]
 			fmt.Printf("\n%d. %s\n", i+1, score.Article.Title)
+			fmt.Printf("URL: %s\n", score.Article.URL)
 			fmt.Printf("Published: %s\n", score.Article.PublishedAt.Format(time.RFC3339))
 			fmt.Printf("Summary: %s\n", score.Article.Summary)
 			fmt.Printf("Scores:\n")

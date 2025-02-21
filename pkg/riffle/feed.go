@@ -13,6 +13,7 @@ type Article struct {
 	Title       string
 	Summary     string
 	Content     string // Full content of the article
+	URL         string // URL of the article
 	PublishedAt time.Time
 }
 
@@ -44,10 +45,17 @@ func FetchLatestArticles(ctx context.Context, feedURL string, n int) ([]Article,
 			content = item.Description
 		}
 
+		// Get the article URL
+		url := item.Link
+		if url == "" {
+			url = item.GUID // fallback to GUID if link is not available
+		}
+
 		articles = append(articles, Article{
 			Title:       item.Title,
 			Summary:     item.Description,
 			Content:     content,
+			URL:         url,
 			PublishedAt: pubDate,
 		})
 	}
