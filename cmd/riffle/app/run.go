@@ -130,7 +130,7 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Why recommended: %s\n", generateRecommendationReason(score))
 
 			// Add Perplexity analysis
-			analysis, err := riffle.AnalyzeWithPerplexity(score.Article)
+			analysis, err := riffle.AnalyzeWithPerplexity(score.Article, modelName)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Warning: Could not get AI analysis: %v\n", err)
 				continue

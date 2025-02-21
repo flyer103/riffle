@@ -201,7 +201,7 @@ type PerplexityAnalysis struct {
 }
 
 // AnalyzeWithPerplexity uses Perplexity API to analyze an article
-func AnalyzeWithPerplexity(article *Article) (*PerplexityAnalysis, error) {
+func AnalyzeWithPerplexity(article *Article, model string) (*PerplexityAnalysis, error) {
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if apiKey == "" {
 		return nil, fmt.Errorf("OPENAI_API_KEY environment variable not set")
@@ -213,7 +213,7 @@ func AnalyzeWithPerplexity(article *Article) (*PerplexityAnalysis, error) {
 		article.Content)
 
 	data := map[string]interface{}{
-		"model": "pplx-7b-chat",
+		"model": model,
 		"messages": []map[string]string{
 			{
 				"role":    "system",

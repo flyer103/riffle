@@ -12,6 +12,7 @@ var (
 	interestsFile string
 	articleCount  int
 	topCount      int
+	modelName     string
 )
 
 // NewRiffleCommand creates the root command for riffle
@@ -30,6 +31,7 @@ valuable content from your RSS subscriptions.`,
 	cmd.Flags().StringVarP(&interestsFile, "interests", "i", "", "Path to file containing interests (one per line)")
 	cmd.Flags().IntVarP(&articleCount, "articles", "n", 3, "Number of articles to fetch from each feed")
 	cmd.Flags().IntVarP(&topCount, "top", "t", 1, "Number of top articles to recommend")
+	cmd.Flags().StringVarP(&modelName, "model", "m", "r1-1776", "Perplexity API model to use for article analysis")
 
 	// Mark required flags
 	cmd.MarkFlagRequired("opml")
