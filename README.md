@@ -2,12 +2,6 @@
 
 Riffle is an RSS feed analyzer and content recommender that helps you find the most valuable content from your RSS subscriptions. It analyzes articles based on content quality and your personal interests to provide intelligent recommendations.
 
-## Screenshot
-
-![Riffle in action](docs/images/effect.png)
-
-Example output showing article recommendations with interest matching and content quality scores.
-
 ## Features
 
 - OPML feed list support
@@ -29,21 +23,25 @@ make
 
 This will create the binary in `bin/<os>_<arch>/riffle`.
 
+## Environment Variables
+
+The following environment variables are required for AI analysis functionality:
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OPENAI_API_KEY` | API key for accessing the Perplexity AI service | Yes |
+| `OPENAI_BASE_URL` | Base URL for the Perplexity API (defaults to https://api.perplexity.ai if not set) | No |
+
 ## Quick Start
 
-1. Copy the example configuration files:
-   ```bash
-   cp conf/feeds.opml my-feeds.opml
-   cp conf/interests.txt my-interests.txt
-   ```
+1. Edit the configuration files to match your interests:
+   - Add your RSS feeds to `feeds.opml` (see example in `conf/feeds.opml`)
+   - Add your interests to `interests.txt` (see example in `conf/interests.txt`)
 
-2. Edit the files to match your interests:
-   - Add your RSS feeds to `my-feeds.opml`
-   - Add your interests to `my-interests.txt`
-
-3. Run Riffle:
+2. Run Riffle:
    ```bash
-   riffle -o my-feeds.opml -i my-interests.txt
+   export OPENAI_API_KEY="your-api-key"
+   riffle -o feeds.opml -i interests.txt
    ```
 
 ## Usage
