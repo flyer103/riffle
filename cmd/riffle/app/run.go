@@ -128,6 +128,21 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  - Content Quality: %.2f\n", score.ContentScore)
 			fmt.Printf("  - Overall: %.2f\n", score.Score)
 			fmt.Printf("Why recommended: %s\n", generateRecommendationReason(score))
+
+			// Add Perplexity analysis
+			analysis, err := riffle.AnalyzeWithPerplexity(score.Article)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Could not get AI analysis: %v\n", err)
+				continue
+			}
+
+			fmt.Printf("\n📊 AI Analysis:\n")
+			fmt.Printf("Summary: %s\n", strings.TrimSpace(analysis.Summary))
+			fmt.Printf("Key Points:\n")
+			for _, point := range analysis.KeyPoints {
+				fmt.Printf("  - %s\n", strings.TrimSpace(point))
+			}
+			fmt.Printf("Significance: %s\n", strings.TrimSpace(analysis.Significance))
 		}
 		fmt.Println(strings.Repeat("=", 80))
 	} else {

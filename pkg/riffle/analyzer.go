@@ -2,7 +2,11 @@ package riffle
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"html"
+	"net/http"
 	"os"
 	"strings"
 	"unicode/utf8"
@@ -187,4 +191,99 @@ func (ca *ContentAnalyzer) calculateLinkScore(doc *goquery.Document) float64 {
 
 	// Score based on external link ratio (0-1)
 	return float64(externalLinks) / float64(linkCount)
+}
+
+// PerplexityAnalysis represents the analysis result from Perplexity API
+type PerplexityAnalysis struct {
+	Summary      string
+	KeyPoints    []string
+	Significance string
+}
+
+// AnalyzeWithPerplexity uses Perplexity API to analyze an article
+func AnalyzeWithPerplexity(article *Article) (*PerplexityAnalysis, error) {
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("OPENAI_API_KEY environment variable not set")
+	}
+
+	client := &http.Client{}
+	prompt := fmt.Sprintf("Analyze this article and provide: 1) A concise summary 2) Key points 3) Why it's significant\n\nTitle: %s\nContent: %s",
+		article.Title,
+		article.Content)
+
+	data := map[string]interface{}{
+		"model": "pplx-7b-chat",
+		"messages": []map[string]string{
+			{
+				"role":    "system",
+				"content": "You are an expert at analyzing articles and providing insightful summaries.",
+			},
+			{
+				"role":    "user",
+				"content": prompt,
+			},
+		},
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", "https://api.perplexity.ai/chat/completions", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	// Extract the analysis from the response
+	choices, ok := result["choices"].([]interface{})
+	if !ok || len(choices) == 0 {
+		return nil, fmt.Errorf("invalid response format")
+	}
+
+	message, ok := choices[0].(map[string]interface{})["message"].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("invalid message format")
+	}
+
+	content, ok := message["content"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid content format")
+	}
+
+	// Parse the content into structured analysis
+	parts := strings.Split(content, "\n\n")
+	analysis := &PerplexityAnalysis{}
+
+	for _, part := range parts {
+		if strings.HasPrefix(part, "Summary:") {
+			analysis.Summary = strings.TrimPrefix(part, "Summary:")
+		} else if strings.HasPrefix(part, "Key points:") {
+			points := strings.Split(strings.TrimPrefix(part, "Key points:"), "\n-")
+			for _, point := range points {
+				if trimmed := strings.TrimSpace(point); trimmed != "" {
+					analysis.KeyPoints = append(analysis.KeyPoints, trimmed)
+				}
+			}
+		} else if strings.HasPrefix(part, "Significance:") {
+			analysis.Significance = strings.TrimPrefix(part, "Significance:")
+		}
+	}
+
+	return analysis, nil
 }
