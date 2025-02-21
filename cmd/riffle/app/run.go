@@ -140,7 +140,8 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 // getFeedTitleByURL returns the feed title for a given article URL
 func getFeedTitleByURL(feeds []riffle.Feed, articleURL string) string {
 	for _, feed := range feeds {
-		if strings.Contains(articleURL, strings.TrimRight(feed.URL, "/feed.xml/feed.atom/rss")) {
+		baseURL := strings.TrimSuffix(strings.TrimSuffix(strings.TrimSuffix(feed.URL, "/feed.xml"), "/feed.atom"), "/rss")
+		if strings.Contains(articleURL, baseURL) {
 			return feed.Title
 		}
 	}
