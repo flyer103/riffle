@@ -17,7 +17,7 @@ type Article struct {
 	PublishedAt time.Time
 }
 
-// FetchLatestArticles fetches the latest n articles from a feed URL
+// FetchLatestArticles fetches articles from the last 2 days from a feed URL, up to n articles
 func FetchLatestArticles(ctx context.Context, feedURL string, n int) ([]Article, error) {
 	fp := gofeed.NewParser()
 	feed, err := fp.ParseURLWithContext(feedURL, ctx)
@@ -25,18 +25,24 @@ func FetchLatestArticles(ctx context.Context, feedURL string, n int) ([]Article,
 		return nil, fmt.Errorf("failed to parse feed: %w", err)
 	}
 
-	articles := make([]Article, 0, n)
-	for i := 0; i < len(feed.Items) && i < n; i++ {
-		item := feed.Items[i]
+	// Calculate the cutoff time (2 days ago)
+	cutoffTime := time.Now().AddDate(0, 0, -2)
 
-		// Use published date if available, otherwise use updated date
+	articles := make([]Article, 0, n)
+	for _, item := range feed.Items {
+		// Get the article's publication time
 		var pubDate time.Time
 		if item.PublishedParsed != nil {
 			pubDate = *item.PublishedParsed
 		} else if item.UpdatedParsed != nil {
 			pubDate = *item.UpdatedParsed
 		} else {
-			pubDate = time.Now() // fallback to current time if no date available
+			continue // Skip articles with no date
+		}
+
+		// Skip articles older than 2 days
+		if pubDate.Before(cutoffTime) {
+			continue
 		}
 
 		// Get the full content if available, otherwise use description
@@ -58,6 +64,11 @@ func FetchLatestArticles(ctx context.Context, feedURL string, n int) ([]Article,
 			URL:         url,
 			PublishedAt: pubDate,
 		})
+
+		// Stop if we have enough articles
+		if len(articles) >= n {
+			break
+		}
 	}
 
 	return articles, nil

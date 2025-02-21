@@ -17,6 +17,7 @@ Example output showing article recommendations with interest matching and conten
 - Multiple recommendation levels
 - Detailed scoring system
 - Direct article URLs in output
+- 2-day time window filtering
 
 ## Installation
 
@@ -59,12 +60,12 @@ riffle -o <opml-file> [-i <interests-file>] [-n <article-count>] [-t <top-count>
 |------|-------|-------------|---------|
 | `--opml` | `-o` | Path to OPML file (required) | - |
 | `--interests` | `-i` | Path to file containing interests (one per line) | - |
-| `--articles` | `-n` | Number of articles to fetch from each feed | 3 |
+| `--articles` | `-n` | Number of articles to fetch from each feed (from last 2 days) | 3 |
 | `--top` | `-t` | Number of top articles to recommend | 1 |
 
 ### Examples
 
-1. Basic usage with default settings (3 articles per feed, top 1 recommendation):
+1. Basic usage with default settings (3 articles from last 2 days, top 1 recommendation):
    ```bash
    riffle -o feeds.opml
    ```
@@ -78,6 +79,8 @@ riffle -o <opml-file> [-i <interests-file>] [-n <article-count>] [-t <top-count>
    ```bash
    riffle -o feeds.opml -i interests.txt -n 5 -t 3
    ```
+
+Note: Riffle only processes articles published within the last 2 days in your current time zone. Articles older than 2 days are automatically filtered out, even if you request more articles with the `-n` flag.
 
 ### Configuration Files
 
