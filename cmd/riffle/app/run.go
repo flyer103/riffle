@@ -136,13 +136,7 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 				continue
 			}
 
-			fmt.Printf("\n📊 AI Analysis:\n")
-			fmt.Printf("Summary: %s\n", strings.TrimSpace(analysis.Summary))
-			fmt.Printf("Key Points:\n")
-			for _, point := range analysis.KeyPoints {
-				fmt.Printf("  - %s\n", strings.TrimSpace(point))
-			}
-			fmt.Printf("Significance: %s\n", strings.TrimSpace(analysis.Significance))
+			fmt.Printf("\n📊 AI Analysis:\n%s\n", analysis.Content)
 		}
 		fmt.Println(strings.Repeat("=", 80))
 	} else {

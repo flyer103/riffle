@@ -196,9 +196,7 @@ func (ca *ContentAnalyzer) calculateLinkScore(doc *goquery.Document) float64 {
 
 // PerplexityAnalysis represents the analysis result from Perplexity API
 type PerplexityAnalysis struct {
-	Summary      string
-	KeyPoints    []string
-	Significance string
+	Content string
 }
 
 // AnalyzeWithPerplexity uses Perplexity API to analyze an article
@@ -288,29 +286,9 @@ func AnalyzeWithPerplexity(article *Article, model string) (*PerplexityAnalysis,
 		return nil, fmt.Errorf("invalid content format in response: %s", string(respBody))
 	}
 
-	// Parse the content into structured analysis
-	parts := strings.Split(content, "\n\n")
-	analysis := &PerplexityAnalysis{}
-
-	for _, part := range parts {
-		if strings.HasPrefix(part, "Summary:") {
-			analysis.Summary = strings.TrimPrefix(part, "Summary:")
-		} else if strings.HasPrefix(part, "Key points:") {
-			points := strings.Split(strings.TrimPrefix(part, "Key points:"), "\n-")
-			for _, point := range points {
-				if trimmed := strings.TrimSpace(point); trimmed != "" {
-					analysis.KeyPoints = append(analysis.KeyPoints, trimmed)
-				}
-			}
-		} else if strings.HasPrefix(part, "Significance:") {
-			analysis.Significance = strings.TrimPrefix(part, "Significance:")
-		}
+	if content == "" {
+		return nil, fmt.Errorf("received empty content from API")
 	}
 
-	// Validate analysis results
-	if analysis.Summary == "" && len(analysis.KeyPoints) == 0 && analysis.Significance == "" {
-		return nil, fmt.Errorf("received empty analysis from API, response: %s", string(respBody))
-	}
-
-	return analysis, nil
+	return &PerplexityAnalysis{Content: content}, nil
 }
