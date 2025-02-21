@@ -1,6 +1,0 @@
-golang programming
-web development
-artificial intelligence
-cloud computing
-system architecture
-performance optimization 
