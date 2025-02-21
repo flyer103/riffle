@@ -61,26 +61,68 @@ riffle -o <opml-file> [-i <interests-file>] [-n <article-count>] [-t <top-count>
 | `--opml` | `-o` | Path to OPML file (required) | - |
 | `--interests` | `-i` | Path to file containing interests (one per line) | - |
 | `--articles` | `-n` | Number of articles to fetch from each feed (from last 2 days) | 3 |
-| `--top` | `-t` | Number of top articles to recommend | 1 |
+| `--top` | `-t` | Number of most valuable articles to recommend | 1 |
+
+### Output Format
+
+The tool provides output in three main sections:
+
+1. **Recent Articles** (📰)
+   - Lists all articles from the last 2 days, grouped by RSS source
+   - Shows title, URL, publication date, and summary (if available)
+   - Only includes articles from your current time zone's last 48 hours
+
+2. **Inactive Sources** (📅)
+   - Lists RSS sources with no updates in the last 2 days
+   - Helps track which feeds are currently inactive
+
+3. **Most Valuable Articles** (🌟)
+   - Unified recommendations across all sources
+   - Shows detailed scoring and reasoning for each recommendation:
+     * Interest Match Score (0.00-1.00)
+     * Content Quality Score (0.00-1.00)
+     * Overall Score (0.00-1.00)
+     * Explanation of why the article was recommended
 
 ### Examples
 
-1. Basic usage with default settings (3 articles from last 2 days, top 1 recommendation):
+1. Basic usage with default settings:
    ```bash
    riffle -o feeds.opml
    ```
+   This will:
+   - Process articles from the last 2 days
+   - Fetch up to 3 articles per feed
+   - Show 1 most valuable article recommendation
 
 2. Include personal interests for better recommendations:
    ```bash
    riffle -o feeds.opml -i interests.txt
    ```
+   This will:
+   - Match articles against your interests
+   - Improve recommendation quality
+   - Show interest match scores
 
-3. Fetch more articles and get more recommendations:
+3. Get more recommendations:
    ```bash
-   riffle -o feeds.opml -i interests.txt -n 5 -t 3
+   riffle -o feeds.opml -i interests.txt -t 3
    ```
+   This will:
+   - Show the top 3 most valuable articles
+   - Rank them by overall score
+   - Include detailed reasoning for each
 
-Note: Riffle only processes articles published within the last 2 days in your current time zone. Articles older than 2 days are automatically filtered out, even if you request more articles with the `-n` flag.
+4. Fetch more articles per feed:
+   ```bash
+   riffle -o feeds.opml -i interests.txt -n 5
+   ```
+   This will:
+   - Fetch up to 5 articles per feed (from last 2 days)
+   - Process more content for better selection
+   - Still respect the 2-day time window
+
+Note: Articles are always filtered to the last 2 days in your current time zone, regardless of how many articles you request with `-n`. This ensures you only see recent, relevant content.
 
 ### Configuration Files
 
