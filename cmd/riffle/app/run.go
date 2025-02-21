@@ -12,6 +12,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// generateRecommendationReason generates a detailed explanation of why an article is recommended
+func generateRecommendationReason(score riffle.ArticleScore) string {
+	var reasons []string
+
+	// Analyze interest match score
+	if score.InterestScore >= 0.7 {
+		reasons = append(reasons, "Strongly matches your interests")
+	} else if score.InterestScore >= 0.5 {
+		reasons = append(reasons, "Moderately aligns with your interests")
+	}
+
+	// Analyze content quality components
+	if score.ContentScore >= 0.7 {
+		reasons = append(reasons, "High-quality content with detailed information")
+	} else if score.ContentScore >= 0.5 {
+		reasons = append(reasons, "Good content quality")
+	}
+
+	// If no specific reasons found, provide a general reason
+	if len(reasons) == 0 {
+		reasons = append(reasons, "Balanced combination of relevance and quality")
+	}
+
+	return strings.Join(reasons, ", ")
+}
+
 func runRiffle(cmd *cobra.Command, args []string) error {
 	feeds, err := riffle.ParseOPML(opmlFile)
 	if err != nil {
@@ -82,6 +108,7 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 				fmt.Printf("   - Interest Match: %.2f\n", score.InterestScore)
 				fmt.Printf("   - Content Quality: %.2f\n", score.ContentScore)
 				fmt.Printf("   - Overall: %.2f\n", score.Score)
+				fmt.Printf("   Why recommended: %s\n", generateRecommendationReason(score))
 			}
 		}
 
@@ -115,6 +142,7 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  - Interest Match: %.2f\n", score.InterestScore)
 			fmt.Printf("  - Content Quality: %.2f\n", score.ContentScore)
 			fmt.Printf("  - Overall: %.2f\n", score.Score)
+			fmt.Printf("Why recommended: %s\n", generateRecommendationReason(score))
 		}
 	} else {
 		fmt.Printf("\n⚠️ No articles found from the last 2 days in any feed.\n")
