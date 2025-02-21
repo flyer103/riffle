@@ -16,6 +16,7 @@ Example output showing article recommendations with interest matching and conten
 - Configurable article fetching
 - Multiple recommendation levels
 - Detailed scoring system
+- Direct article URLs in output
 
 ## Installation
 
@@ -26,6 +27,23 @@ make
 ```
 
 This will create the binary in `bin/<os>_<arch>/riffle`.
+
+## Quick Start
+
+1. Copy the example configuration files:
+   ```bash
+   cp conf/feeds.opml my-feeds.opml
+   cp conf/interests.txt my-interests.txt
+   ```
+
+2. Edit the files to match your interests:
+   - Add your RSS feeds to `my-feeds.opml`
+   - Add your interests to `my-interests.txt`
+
+3. Run Riffle:
+   ```bash
+   riffle -o my-feeds.opml -i my-interests.txt
+   ```
 
 ## Usage
 
@@ -61,38 +79,46 @@ riffle -o <opml-file> [-i <interests-file>] [-n <article-count>] [-t <top-count>
    riffle -o feeds.opml -i interests.txt -n 5 -t 3
    ```
 
-### Input File Formats
+### Configuration Files
 
-#### OPML File Format
-The OPML file should contain your RSS feed subscriptions. Example:
+#### OPML File Format (feeds.opml)
+The OPML file contains your RSS feed subscriptions, organized by category. Example structure:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <opml version="1.0">
     <head>
-        <title>My Feed Subscriptions</title>
+        <title>Tech Feed Subscriptions</title>
     </head>
     <body>
-        <outline text="Tech">
+        <outline text="Programming">
             <outline type="rss" 
-                    text="Hacker News" 
-                    title="Hacker News"
-                    xmlUrl="https://news.ycombinator.com/rss" 
-                    htmlUrl="https://news.ycombinator.com/"/>
+                    text="The Go Blog" 
+                    xmlUrl="https://go.dev/blog/feed.atom"/>
         </outline>
     </body>
 </opml>
 ```
 
-#### Interests File Format
-The interests file should contain one interest per line. Each interest can be multiple words. Example:
+See `conf/feeds.opml` for a complete example with multiple feeds and categories.
+
+#### Interests File Format (interests.txt)
+The interests file contains your topics of interest, one per line. You can:
+- Group interests with comments (lines starting with #)
+- Use multiple words per interest
+- Order by priority (all interests are weighted equally)
+
+Example structure:
 ```
+# Programming Languages
 golang programming
-web development
-artificial intelligence
-cloud computing
-system architecture
-performance optimization
+rust development
+
+# Technologies
+cloud native
+distributed systems
 ```
+
+See `conf/interests.txt` for a complete example with various technology interests.
 
 ### Scoring System
 

@@ -1,0 +1,23 @@
+# Programming Languages and Frameworks
+golang programming
+rust development
+web development
+cloud native
+
+# Software Architecture
+system design
+microservices architecture
+distributed systems
+performance optimization
+
+# Emerging Technologies
+artificial intelligence
+machine learning
+blockchain technology
+edge computing
+
+# Development Practices
+devops practices
+software testing
+security best practices
+code quality 

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+    <head>
+        <title>Tech Feed Subscriptions</title>
+    </head>
+    <body>
+        <outline text="Programming">
+            <outline type="rss" 
+                    text="The Go Blog" 
+                    title="The Go Blog"
+                    xmlUrl="https://go.dev/blog/feed.atom" 
+                    htmlUrl="https://go.dev/blog/"/>
+            <outline type="rss" 
+                    text="Rust Blog" 
+                    title="Rust Blog"
+                    xmlUrl="https://blog.rust-lang.org/feed.xml" 
+                    htmlUrl="https://blog.rust-lang.org/"/>
+        </outline>
+        <outline text="Tech News">
+            <outline type="rss" 
+                    text="Hacker News" 
+                    title="Hacker News"
+                    xmlUrl="https://news.ycombinator.com/rss" 
+                    htmlUrl="https://news.ycombinator.com/"/>
+            <outline type="rss" 
+                    text="TechCrunch" 
+                    title="TechCrunch"
+                    xmlUrl="https://techcrunch.com/feed/" 
+                    htmlUrl="https://techcrunch.com/"/>
+        </outline>
+    </body>
+</opml> 
