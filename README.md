@@ -187,27 +187,6 @@ Articles are scored based on multiple factors with equal weighting:
 
 The final score is a combination of both factors, helping you find articles that are both high-quality and relevant to your interests.
 
-## Development
-
-### Prerequisites
-
-- Go 1.24 or later
-- Make
-
-### Building for Different Platforms
-
-To build for a specific platform:
-
-```bash
-make PLATFORMS=linux/amd64
-```
-
-Available platforms:
-- linux/amd64
-- linux/arm64
-- darwin/amd64
-- darwin/arm64
-
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details. 
