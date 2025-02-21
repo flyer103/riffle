@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -250,25 +251,41 @@ func AnalyzeWithPerplexity(article *Article, model string) (*PerplexityAnalysis,
 	}
 	defer resp.Body.Close()
 
+	// Read the raw response body for error logging
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Check response status code
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(respBody))
+	}
+
 	var result map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w, body: %s", err, string(respBody))
+	}
+
+	// Check for API error response
+	if errMsg, ok := result["error"].(map[string]interface{}); ok {
+		return nil, fmt.Errorf("API error: %v", errMsg)
 	}
 
 	// Extract the analysis from the response
 	choices, ok := result["choices"].([]interface{})
 	if !ok || len(choices) == 0 {
-		return nil, fmt.Errorf("invalid response format")
+		return nil, fmt.Errorf("invalid response format: missing or empty choices array, response: %s", string(respBody))
 	}
 
 	message, ok := choices[0].(map[string]interface{})["message"].(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("invalid message format")
+		return nil, fmt.Errorf("invalid message format in response: %s", string(respBody))
 	}
 
 	content, ok := message["content"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid content format")
+		return nil, fmt.Errorf("invalid content format in response: %s", string(respBody))
 	}
 
 	// Parse the content into structured analysis
@@ -288,6 +305,11 @@ func AnalyzeWithPerplexity(article *Article, model string) (*PerplexityAnalysis,
 		} else if strings.HasPrefix(part, "Significance:") {
 			analysis.Significance = strings.TrimPrefix(part, "Significance:")
 		}
+	}
+
+	// Validate analysis results
+	if analysis.Summary == "" && len(analysis.KeyPoints) == 0 && analysis.Significance == "" {
+		return nil, fmt.Errorf("received empty analysis from API, response: %s", string(respBody))
 	}
 
 	return analysis, nil
