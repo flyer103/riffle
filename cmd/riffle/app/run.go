@@ -27,16 +27,24 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 
 	// Store all article scores for final recommendation
 	var allScores []riffle.ArticleScore
+	// Track feeds without recent updates
+	var noUpdateFeeds []string
 
 	for _, feed := range feeds {
-		fmt.Printf("\nFeed: %s (%s)\n", feed.Title, feed.URL)
-		fmt.Println(strings.Repeat("-", 80))
-
 		articles, err := riffle.FetchLatestArticles(ctx, feed.URL, articleCount)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error fetching articles from %s: %v\n", feed.URL, err)
 			continue
 		}
+
+		// Skip printing feed details if no recent articles
+		if len(articles) == 0 {
+			noUpdateFeeds = append(noUpdateFeeds, feed.Title)
+			continue
+		}
+
+		fmt.Printf("\nFeed: %s (%s)\n", feed.Title, feed.URL)
+		fmt.Println(strings.Repeat("-", 80))
 
 		// Analyze and score each article
 		var feedScores []riffle.ArticleScore
@@ -80,6 +88,16 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 		fmt.Println(strings.Repeat("-", 80))
 	}
 
+	// Print feeds without recent updates
+	if len(noUpdateFeeds) > 0 {
+		fmt.Printf("\n📅 RSS Sources Without Recent Updates (Last 2 Days):\n")
+		fmt.Println(strings.Repeat("-", 50))
+		for i, feedTitle := range noUpdateFeeds {
+			fmt.Printf("%d. %s\n", i+1, feedTitle)
+		}
+		fmt.Println(strings.Repeat("-", 50))
+	}
+
 	// Print overall highest-value article recommendations
 	if len(allScores) > 0 {
 		sort.Slice(allScores, func(i, j int) bool {
@@ -98,6 +116,8 @@ func runRiffle(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  - Content Quality: %.2f\n", score.ContentScore)
 			fmt.Printf("  - Overall: %.2f\n", score.Score)
 		}
+	} else {
+		fmt.Printf("\n⚠️ No articles found from the last 2 days in any feed.\n")
 	}
 
 	return nil
