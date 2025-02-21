@@ -25,25 +25,54 @@ This will create the binary in `bin/<os>_<arch>/riffle`.
 
 ### Docker
 
-To build and run using Docker:
+You can build and run Riffle using Docker in several ways:
+
+#### 1. Build for Current Platform
 
 ```bash
 # Build the image
-docker build -t riffle .
+make image
 
 # Run with your configuration files
 docker run --rm \
-          -v "$(pwd)/conf/feeds.opml:/app/conf/feeds.opml:ro" \
-          -v "$(pwd)/conf/interests.txt:/app/conf/interests.txt:ro" \
-          -e OPENAI_API_KEY="your-api-key" \
-          riffle -o /app/conf/feeds.opml -i /app/conf/interests.txt
+    -v "$(pwd)/conf/feeds.opml:/app/conf/feeds.opml:ro" \
+    -v "$(pwd)/conf/interests.txt:/app/conf/interests.txt:ro" \
+    -e OPENAI_API_KEY="your-api-key" \
+    riffle:latest -o /app/conf/feeds.opml -i /app/conf/interests.txt
+```
 
-# Or run with custom parameters
+#### 2. Build for Specific Platform
+
+```bash
+# Build for Linux AMD64
+make image-linux_amd64
+
+# Build for Linux ARM64
+make image-linux_arm64
+
+# Build for macOS AMD64
+make image-darwin_amd64
+
+# Build for macOS ARM64
+make image-darwin_arm64
+```
+
+#### Docker Run Options
+
+You can customize the run configuration:
+
+```bash
 docker run --rm \
-          -v "$(pwd)/conf/feeds.opml:/app/conf/feeds.opml:ro" \
-          -v "$(pwd)/conf/interests.txt:/app/conf/interests.txt:ro" \
-          -e OPENAI_API_KEY="your-api-key" \
-          riffle -o /app/conf/feeds.opml -i /app/conf/interests.txt -n 5 -t 3 -m "custom-model"
+    -v "$(pwd)/conf/feeds.opml:/app/conf/feeds.opml:ro" \
+    -v "$(pwd)/conf/interests.txt:/app/conf/interests.txt:ro" \
+    -e OPENAI_API_KEY="your-api-key" \
+    -e OPENAI_BASE_URL="your-api-base-url" \  # Optional
+    riffle:latest \
+    -o /app/conf/feeds.opml \
+    -i /app/conf/interests.txt \
+    -n 5 \                     # Number of articles to fetch
+    -t 3 \                     # Number of recommendations
+    -m "custom-model"          # Custom model name
 ```
 
 ## Environment Variables

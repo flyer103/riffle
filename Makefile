@@ -27,6 +27,10 @@ BINS ?= riffle
 # The platforms we support
 ALL_PLATFORMS ?= linux/amd64 linux/arm64 darwin/amd64 darwin/arm64
 
+# Docker image settings
+IMAGE_NAME ?= riffle
+IMAGE_TAG ?= $(VERSION)
+
 # This version-strategy uses git tags to set the version string
 VERSION ?= $(shell git describe --tags --always --dirty)
 #
@@ -228,6 +232,21 @@ lint: | $(BUILD_DIRS)
 	    $(BUILD_IMAGE)                                          \
 	    ./build/lint.sh ./...
 
+# Docker image building targets
+image: # @HELP builds a Docker image for the current platform
+image:
+	echo "# Building Docker image for $(OS)/$(ARCH)"
+	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) .
+
+image-%: # @HELP builds a Docker image for a specific platform (e.g., make image-linux_amd64)
+	echo "# Building Docker image for $(subst _,/,$*)"
+	docker buildx build --platform $(subst _,/,$*) -t $(IMAGE_NAME):$(IMAGE_TAG) .
+
+all-images: # @HELP builds Docker images for all supported platforms
+	echo "# Building Docker images for all platforms"
+	docker buildx build --platform $(subst $(space),$(comma),$(ALL_PLATFORMS)) \
+		-t $(IMAGE_NAME):$(IMAGE_TAG) .
+
 $(BUILD_DIRS):
 	mkdir -p $@
 
@@ -246,6 +265,8 @@ help:
 	echo "  ARCH = $(ARCH)"
 	echo "  DBG = $(DBG)"
 	echo "  GOFLAGS = $(GOFLAGS)"
+	echo "  IMAGE_NAME = $(IMAGE_NAME)"
+	echo "  IMAGE_TAG = $(IMAGE_TAG)"
 	echo
 	echo "TARGETS:"
 	grep -E '^.*: *# *@HELP' $(MAKEFILE_LIST)     \
@@ -253,4 +274,8 @@ help:
 	        BEGIN {FS = ": *# *@HELP"};           \
 	        { printf "  %-30s %s\n", $$1, $$2 };  \
 	    '
+
+# Helper variables for multi-platform builds
+space := $(empty) $(empty)
+comma := ,
 
