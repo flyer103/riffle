@@ -13,6 +13,7 @@ Riffle is a powerful RSS feed reader and aggregator with a REST API for managing
 - **Content Analysis**: Analyze RSS content quality and relevance
 - **Metrics**: Prometheus metrics for monitoring
 - **Profiling**: Optional pprof endpoints for debugging
+- **Modern Web UI**: A responsive web interface built with Vue.js and Material 3 design
 
 ## Getting Started
 
@@ -20,6 +21,7 @@ Riffle is a powerful RSS feed reader and aggregator with a REST API for managing
 
 - Go 1.24 or higher
 - SQLite3
+- Node.js 16+ and npm (for frontend)
 
 ### Installation
 
@@ -30,10 +32,17 @@ git clone https://github.com/flyer103/riffle.git
 cd riffle
 ```
 
-2. Build the application:
+2. Build the backend application:
 
 ```bash
 make build
+```
+
+3. Set up the frontend:
+
+```bash
+cd frontend
+npm install
 ```
 
 ### Usage
@@ -45,6 +54,15 @@ Riffle provides several commands:
 ```bash
 ./riffle serve --port 8080 --db-path ./riffle.db
 ```
+
+#### Running the Frontend
+
+```bash
+cd frontend
+npm run serve
+```
+
+Then open your browser to http://localhost:3000
 
 #### Importing OPML Files
 
@@ -97,6 +115,17 @@ The API includes endpoints for:
 - Content Search
 - Recommendations
 - System Information
+
+## Frontend
+
+The frontend provides a modern web interface for reading RSS feeds:
+
+- Built with Vue.js and Material 3 design
+- Displays all RSS sources on the left side of the page
+- Shows the 10 most recent articles of each RSS source on the right side
+- Automatically refreshes RSS content every 10 minutes
+
+For more information about the frontend, see the [frontend README](frontend/README.md).
 
 ## License
 
