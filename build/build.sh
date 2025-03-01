@@ -30,7 +30,14 @@ if [ -z "${VERSION:-}" ]; then
     exit 1
 fi
 
-export CGO_ENABLED=0
+# Enable CGO only for Linux builds
+if [ "${OS}" = "linux" ]; then
+    export CGO_ENABLED=1
+else
+    # Disable CGO for non-Linux builds (e.g., darwin)
+    export CGO_ENABLED=0
+fi
+
 export GOARCH="${ARCH}"
 export GOOS="${OS}"
 export GO111MODULE=on

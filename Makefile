@@ -98,6 +98,16 @@ OUTBINS = $(foreach bin,$(BINS),bin/$(OS)_$(ARCH)/$(bin)$(BIN_EXTENSION))
 build: $(OUTBINS)
 	echo
 
+build-local: # @HELP builds binaries using local golang installation
+build-local: | $(BUILD_DIRS)
+	echo "# building locally for $(OS)/$(ARCH)"
+	GOARCH=$(ARCH) GOOS=$(OS) CGO_ENABLED=1 \
+	go build -o bin/$(OS)_$(ARCH)/$(BINS) \
+	    -trimpath \
+	    -ldflags "-X $(shell go list -m)/pkg/version.Version=$(VERSION) -s -w" \
+	    ./cmd/$(BINS)
+	echo "binary: bin/$(OS)_$(ARCH)/$(BINS)"
+
 # Directories that we need created to build/test.
 BUILD_DIRS := bin/$(OS)_$(ARCH)                   \
               bin/tools                           \
@@ -139,7 +149,7 @@ go-build: | $(BUILD_DIRS)
 	docker run                                                  \
 	    -i                                                      \
 	    --rm                                                    \
-	    -u $$(id -u):$$(id -g)                                  \
+	    -u root:root                                            \
 	    -v $$(pwd):/src                                         \
 	    -w /src                                                 \
 	    -v $$(pwd)/.go/bin/$(OS)_$(ARCH):/go/bin                \
@@ -155,7 +165,7 @@ go-build: | $(BUILD_DIRS)
 	    --env HTTP_PROXY="$(HTTP_PROXY)"                        \
 	    --env HTTPS_PROXY="$(HTTPS_PROXY)"                      \
 	    $(BUILD_IMAGE)                                          \
-	    ./build/build.sh ./...
+	    /bin/sh -c "apk add --no-cache gcc musl-dev clang && mkdir -p /.cache/gocache /.cache/gomodcache && chmod -R 777 /.cache && ./build/build.sh ./..."
 
 # Example: make shell CMD="-c 'date > datefile'"
 shell: # @HELP launches a shell in the containerized build environment
@@ -241,11 +251,6 @@ image:
 image-%: # @HELP builds a Docker image for a specific platform (e.g., make image-linux_amd64)
 	echo "# Building Docker image for $(subst _,/,$*)"
 	docker buildx build --platform $(subst _,/,$*) -t $(IMAGE_NAME):$(IMAGE_TAG) .
-
-all-images: # @HELP builds Docker images for all supported platforms
-	echo "# Building Docker images for all platforms"
-	docker buildx build --platform $(subst $(space),$(comma),$(ALL_PLATFORMS)) \
-		-t $(IMAGE_NAME):$(IMAGE_TAG) .
 
 $(BUILD_DIRS):
 	mkdir -p $@
