@@ -1,0 +1,1000 @@
+openapi: 3.0.0
+info:
+  title: Riffle API
+  description: REST API for Riffle RSS feed management and content recommendations
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /sources:
+    get:
+      summary: List RSS Sources
+      description: Retrieves a list of RSS sources with pagination support
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of sources to return
+          schema:
+            type: integer
+            default: 50
+        - name: nextToken
+          in: query
+          description: Pagination token for retrieving the next set of results
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of RSS sources
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sources:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Source'
+                  nextToken:
+                    type: string
+                    description: Token for pagination
+    post:
+      summary: Create RSS Source
+      description: Creates a new RSS source
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSourceInput'
+      responses:
+        '200':
+          description: The created RSS source
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /sources/{id}:
+    get:
+      summary: Get RSS Source
+      description: Retrieves a specific RSS source by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The UUID of the RSS source
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The requested RSS source
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+        '404':
+          description: Source not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update RSS Source
+      description: Updates an existing RSS source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The UUID of the RSS source
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSourceInput'
+      responses:
+        '200':
+          description: The updated RSS source
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Source not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete RSS Source
+      description: Deletes an RSS source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The UUID of the RSS source
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Source deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '404':
+          description: Source not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /sources/batch:
+    post:
+      summary: Batch Create Sources
+      description: Creates multiple RSS sources in a single request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchCreateSourcesInput'
+      responses:
+        '200':
+          description: The created RSS sources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchCreateSourcesOutput'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Batch Delete Sources
+      description: Deletes multiple RSS sources in a single request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchDeleteSourcesInput'
+      responses:
+        '200':
+          description: Sources deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchDeleteSourcesOutput'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /contents:
+    get:
+      summary: List Contents
+      description: Retrieves a list of RSS content items with filtering and pagination support
+      parameters:
+        - name: sourceId
+          in: query
+          description: Filter by source ID
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          schema:
+            type: integer
+            default: 50
+        - name: nextToken
+          in: query
+          description: Pagination token for retrieving the next set of results
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: Filter by publication date (RFC3339 format)
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: Filter by publication date (RFC3339 format)
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: A list of RSS content items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Content'
+                  nextToken:
+                    type: string
+                    description: Token for pagination
+
+  /contents/{id}:
+    get:
+      summary: Get Content
+      description: Retrieves a specific content item by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The UUID of the content item
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The requested content item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Content'
+        '404':
+          description: Content not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update Content
+      description: Updates an existing content item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The UUID of the content item
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContentInput'
+      responses:
+        '200':
+          description: The updated content item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Content'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Content not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete Content
+      description: Deletes a content item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The UUID of the content item
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Content deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '404':
+          description: Content not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /contents/batch:
+    delete:
+      summary: Batch Delete Contents
+      description: Deletes multiple content items in a single request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchDeleteContentsInput'
+      responses:
+        '200':
+          description: Contents deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchDeleteContentsOutput'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /contents/fetch:
+    post:
+      summary: Fetch Contents
+      description: Initiates a job to fetch new content from RSS sources
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FetchContentsInput'
+      responses:
+        '200':
+          description: Fetch job created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FetchJob'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /contents/fetch/{jobId}:
+    get:
+      summary: Get Fetch Status
+      description: Retrieves the status of a content fetch job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: The UUID of the fetch job
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The fetch job status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FetchJobStatus'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /contents/search:
+    get:
+      summary: Search Contents
+      description: Searches for content items based on a query string
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query string
+          schema:
+            type: string
+        - name: sourceId
+          in: query
+          description: Filter by source ID
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          schema:
+            type: integer
+            default: 50
+        - name: nextToken
+          in: query
+          description: Pagination token for retrieving the next set of results
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Content'
+                  nextToken:
+                    type: string
+                    description: Token for pagination
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /recommendations:
+    get:
+      summary: Get Recommendations
+      description: Retrieves content recommendations for a user
+      parameters:
+        - name: userId
+          in: query
+          description: User ID for personalized recommendations
+          schema:
+            type: string
+        - name: sourceIds
+          in: query
+          description: Comma-separated list of source IDs to filter recommendations
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of recommendations to return
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Content recommendations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recommendation'
+                  count:
+                    type: integer
+                    description: Number of recommendations returned
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /recommendations/feedback:
+    post:
+      summary: Submit Feedback
+      description: Submits user feedback for a content item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitFeedbackInput'
+      responses:
+        '200':
+          description: Feedback submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /recommendations/feedback/{userId}:
+    get:
+      summary: Get User Feedback
+      description: Retrieves feedback submitted by a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The ID of the user
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User feedback
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Feedback'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /health:
+    get:
+      summary: Health Check
+      description: Checks the health status of the server
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+
+  /system/info:
+    get:
+      summary: System Info
+      description: Retrieves information about the running system
+      responses:
+        '200':
+          description: System information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemInfo'
+
+components:
+  schemas:
+    Source:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the source
+        name:
+          type: string
+          description: Name of the RSS source
+        url:
+          type: string
+          format: uri
+          description: URL of the RSS feed
+        description:
+          type: string
+          description: Description of the RSS source
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      required:
+        - id
+        - name
+        - url
+        - createdAt
+        - updatedAt
+
+    CreateSourceInput:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the RSS source
+        url:
+          type: string
+          format: uri
+          description: URL of the RSS feed
+        description:
+          type: string
+          description: Description of the RSS source
+      required:
+        - name
+        - url
+
+    UpdateSourceInput:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the RSS source
+        url:
+          type: string
+          format: uri
+          description: URL of the RSS feed
+        description:
+          type: string
+          description: Description of the RSS source
+
+    BatchCreateSourcesInput:
+      type: object
+      properties:
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateSourceInput'
+      required:
+        - sources
+
+    BatchCreateSourcesOutput:
+      type: object
+      properties:
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/Source'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchError'
+
+    BatchDeleteSourcesInput:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - ids
+
+    BatchDeleteSourcesOutput:
+      type: object
+      properties:
+        success:
+          type: boolean
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchError'
+
+    BatchDeleteContentsInput:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - ids
+
+    BatchDeleteContentsOutput:
+      type: object
+      properties:
+        success:
+          type: boolean
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchError'
+
+    Content:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the content
+        sourceId:
+          type: string
+          format: uuid
+          description: ID of the source this content belongs to
+        title:
+          type: string
+          description: Title of the content
+        link:
+          type: string
+          format: uri
+          description: URL to the original content
+        description:
+          type: string
+          description: Short description or summary
+        content:
+          type: string
+          description: Full content
+        author:
+          type: string
+          description: Author of the content
+        publishedAt:
+          type: string
+          format: date-time
+          description: Publication timestamp
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      required:
+        - id
+        - sourceId
+        - title
+        - link
+        - publishedAt
+        - createdAt
+        - updatedAt
+
+    UpdateContentInput:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Title of the content
+        description:
+          type: string
+          description: Short description or summary
+        content:
+          type: string
+          description: Full content
+
+    FetchContentsInput:
+      type: object
+      properties:
+        sourceId:
+          type: string
+          format: uuid
+          description: ID of the source to fetch (null for all sources)
+        days:
+          type: integer
+          description: Number of days to look back for content
+          default: 7
+
+    FetchJob:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+          description: Unique identifier for the fetch job
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+          description: Status of the job
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+
+    FetchJobStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the fetch job
+        sourceId:
+          type: string
+          format: uuid
+          description: ID of the source being fetched (null for all sources)
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+          description: Status of the job
+        startedAt:
+          type: string
+          format: date-time
+          description: Start timestamp
+        completedAt:
+          type: string
+          format: date-time
+          description: Completion timestamp
+        itemsProcessed:
+          type: integer
+          description: Number of items processed
+        itemsAdded:
+          type: integer
+          description: Number of new items added
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobError'
+
+    Recommendation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the content
+        sourceId:
+          type: string
+          format: uuid
+          description: ID of the source this content belongs to
+        title:
+          type: string
+          description: Title of the content
+        link:
+          type: string
+          format: uri
+          description: URL to the original content
+        description:
+          type: string
+          description: Short description or summary
+        content:
+          type: string
+          description: Full content
+        author:
+          type: string
+          description: Author of the content
+        publishedAt:
+          type: string
+          format: date-time
+          description: Publication timestamp
+        score:
+          type: number
+          format: float
+          description: Recommendation score (0-1)
+      required:
+        - id
+        - sourceId
+        - title
+        - link
+        - publishedAt
+        - score
+
+    SubmitFeedbackInput:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: ID of the user submitting feedback
+        contentId:
+          type: string
+          format: uuid
+          description: ID of the content being rated
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Rating (1-5)
+        feedback:
+          type: string
+          description: Optional text feedback
+      required:
+        - userId
+        - contentId
+        - rating
+
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the feedback
+        userId:
+          type: string
+          description: ID of the user who submitted the feedback
+        contentId:
+          type: string
+          format: uuid
+          description: ID of the content being rated
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Rating (1-5)
+        feedback:
+          type: string
+          description: Optional text feedback
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+      required:
+        - id
+        - userId
+        - contentId
+        - rating
+        - createdAt
+
+    SystemInfo:
+      type: object
+      properties:
+        version:
+          type: string
+          description: Server version
+        goVersion:
+          type: string
+          description: Go runtime version
+        startTime:
+          type: string
+          format: date-time
+          description: Server start time
+        uptime:
+          type: string
+          description: Server uptime
+        numGoroutine:
+          type: integer
+          description: Number of active goroutines
+
+    BatchError:
+      type: object
+      properties:
+        index:
+          type: integer
+          description: Index of the item that caused the error
+        errorType:
+          type: string
+          description: Type of error
+        message:
+          type: string
+          description: Error message
+      required:
+        - index
+        - errorType
+        - message
+
+    JobError:
+      type: object
+      properties:
+        sourceId:
+          type: string
+          format: uuid
+          description: ID of the source that caused the error
+        errorType:
+          type: string
+          description: Type of error
+        message:
+          type: string
+          description: Error message
+      required:
+        - errorType
+        - message
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      required:
+        - error 
