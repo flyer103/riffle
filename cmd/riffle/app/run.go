@@ -12,6 +12,38 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewRunCommand creates a new run command
+func NewRunCommand() *cobra.Command {
+	var (
+		opmlFile      string
+		interestsFile string
+		articleCount  int
+		topCount      int
+		modelName     string
+	)
+
+	cmd := &cobra.Command{
+		Use:   "run",
+		Short: "Run RSS feed analysis and content recommendations",
+		Long:  "Analyze RSS feeds from an OPML file and recommend articles based on content quality and user interests",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runRiffle(cmd, args, opmlFile, interestsFile, articleCount, topCount, modelName)
+		},
+	}
+
+	// Add flags
+	cmd.Flags().StringVarP(&opmlFile, "opml", "o", "", "Path to OPML file (required)")
+	cmd.Flags().StringVarP(&interestsFile, "interests", "i", "", "Path to file containing interests (one per line)")
+	cmd.Flags().IntVarP(&articleCount, "articles", "n", 3, "Number of articles to fetch from each feed")
+	cmd.Flags().IntVarP(&topCount, "top", "t", 1, "Number of top articles to recommend")
+	cmd.Flags().StringVarP(&modelName, "model", "m", "r1-1776", "Perplexity API model to use for article analysis")
+
+	// Mark required flags
+	cmd.MarkFlagRequired("opml")
+
+	return cmd
+}
+
 // generateRecommendationReason generates a detailed explanation of why an article is recommended
 func generateRecommendationReason(score riffle.ArticleScore) string {
 	var reasons []string
@@ -46,7 +78,7 @@ func cleanAIAnalysis(content string) string {
 	return content
 }
 
-func runRiffle(cmd *cobra.Command, args []string) error {
+func runRiffle(cmd *cobra.Command, args []string, opmlFile, interestsFile string, articleCount, topCount int, modelName string) error {
 	feeds, err := riffle.ParseOPML(opmlFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse OPML file: %w", err)

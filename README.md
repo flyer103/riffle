@@ -1,244 +1,340 @@
-# Riffle
+# Riffle - RSS Feed Reader and Aggregator
 
-Riffle is an RSS feed analyzer and content recommender that helps you find the most valuable content from your RSS subscriptions. It analyzes articles based on content quality and your personal interests to provide intelligent recommendations.
+Riffle is a powerful RSS feed reader and aggregator with a REST API for managing RSS sources and content.
 
 ## Features
 
-- OPML feed list support
-- Content quality analysis
-- Personal interest matching
-- Configurable article fetching
-- Multiple recommendation levels
-- Detailed scoring system
-- Direct article URLs in output
-- 2-day time window filtering
+- **RSS Source Management**: Add, update, delete, and list RSS sources
+- **Content Management**: Fetch, update, delete, and list RSS content
+- **Recommendations**: Get personalized content recommendations based on user feedback
+- **Search**: Search for content by keywords
+- **Batch Operations**: Perform batch operations on sources and content
+- **Metrics**: Prometheus metrics for monitoring
+- **Profiling**: Optional pprof endpoints for debugging
 
-## Installation
+## Getting Started
 
-To build the application:
+### Prerequisites
 
-```bash
-make
-```
+- Go 1.21 or higher
+- SQLite3
 
-This will create the binary in `bin/<os>_<arch>/riffle`.
+### Installation
 
-### Docker
-
-You can build and run Riffle using Docker in several ways:
-
-#### 1. Build for Current Platform
+1. Clone the repository:
 
 ```bash
-# Build the image
-make image
-
-# Run with your configuration files
-docker run --rm \
-    -v "$(pwd)/conf/feeds.opml:/app/conf/feeds.opml:ro" \
-    -v "$(pwd)/conf/interests.txt:/app/conf/interests.txt:ro" \
-    -e OPENAI_API_KEY="your-api-key" \
-    riffle:latest -o /app/conf/feeds.opml -i /app/conf/interests.txt
+git clone https://github.com/flyer103/riffle.git
+cd riffle
 ```
 
-#### 2. Build for Specific Platform
+2. Install dependencies:
 
 ```bash
-# Build for Linux AMD64
-make image-linux_amd64
-
-# Build for Linux ARM64
-make image-linux_arm64
-
-# Build for macOS AMD64
-make image-darwin_amd64
-
-# Build for macOS ARM64
-make image-darwin_arm64
+go mod download
 ```
 
-#### Docker Run Options
-
-You can customize the run configuration:
+3. Build the application:
 
 ```bash
-docker run --rm \
-    -v "$(pwd)/conf/feeds.opml:/app/conf/feeds.opml:ro" \
-    -v "$(pwd)/conf/interests.txt:/app/conf/interests.txt:ro" \
-    -e OPENAI_API_KEY="your-api-key" \
-    -e OPENAI_BASE_URL="your-api-base-url" \  # Optional
-    riffle:latest \
-    -o /app/conf/feeds.opml \
-    -i /app/conf/interests.txt \
-    -n 5 \                     # Number of articles to fetch
-    -t 3 \                     # Number of recommendations
-    -m "custom-model"          # Custom model name
+go build -o riffle cmd/riffle/main.go
 ```
 
-## Environment Variables
+### Usage
 
-The following environment variables are required for AI analysis functionality:
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `OPENAI_API_KEY` | API key for accessing the Perplexity AI service | Yes |
-| `OPENAI_BASE_URL` | Base URL for the Perplexity API (defaults to https://api.perplexity.ai if not set) | No |
-
-## Quick Start
-
-1. Edit the configuration files to match your interests:
-   - Add your RSS feeds to `feeds.opml` (see example in `conf/feeds.opml`)
-   - Add your interests to `interests.txt` (see example in `conf/interests.txt`)
-
-2. Run Riffle:
-   ```bash
-   export OPENAI_API_KEY="your-api-key"
-   riffle -o feeds.opml -i interests.txt
-   ```
-
-## Usage
-
-Basic usage:
+#### Running the Server
 
 ```bash
-riffle -o <opml-file> [-i <interests-file>] [-n <article-count>] [-t <top-count>] [-m <model-name>]
+./riffle serve --port 8080 --db-path ./riffle.db
 ```
 
-### Command Line Options
+#### Command-line Options
 
-| Flag | Short | Description | Default |
-|------|-------|-------------|---------|
-| `--opml` | `-o` | Path to OPML file (required) | - |
-| `--interests` | `-i` | Path to file containing interests (one per line) | - |
-| `--articles` | `-n` | Number of articles to fetch from each feed (from last 2 days) | 3 |
-| `--top` | `-t` | Number of most valuable articles to recommend | 1 |
-| `--model` | `-m` | Perplexity API model to use for article analysis | r1-1776 |
+- `--port`: Port to listen on (default: 8080)
+- `--db-path`: Path to the SQLite database file (default: ./riffle.db)
+- `--log-level`: Log level (debug, info, warn, error) (default: info)
+- `--enable-pprof`: Enable pprof debugging endpoints (default: false)
+- `--metrics-port`: Port for Prometheus metrics (0 to disable) (default: 0)
+- `--rate-limit`: Rate limit in requests per second (0 to disable) (default: 100)
+- `--enable-cors`: Enable CORS (default: false)
+- `--cors-origins`: Allowed CORS origins (default: *)
+- `--read-timeout`: HTTP server read timeout (default: 30s)
+- `--write-timeout`: HTTP server write timeout (default: 30s)
 
-### Output Format
+## API Documentation
 
-The tool provides output in four main sections:
+### RSS Sources
 
-1. **Recent Articles** (📰)
-   - Lists all articles from the last 2 days, grouped by RSS source
-   - Shows title, URL, publication date, and summary (if available)
-   - Only includes articles from your current time zone's last 48 hours
+#### List Sources
 
-2. **Inactive Sources** (📅)
-   - Lists RSS sources with no updates in the last 2 days
-   - Helps track which feeds are currently inactive
-
-3. **Most Valuable Articles** (🌟)
-   - Unified recommendations across all sources
-   - Shows detailed scoring and reasoning for each recommendation:
-     * Interest Match Score (0.00-1.00)
-     * Content Quality Score (0.00-1.00)
-     * Overall Score (0.00-1.00)
-     * Explanation of why the article was recommended
-
-4. **AI Analysis** (📊)
-   - Provides in-depth analysis of recommended articles using Perplexity AI
-
-### Examples
-
-1. Basic usage with default settings:
-   ```bash
-   riffle -o feeds.opml
-   ```
-   This will:
-   - Process articles from the last 2 days
-   - Fetch up to 3 articles per feed
-   - Show 1 most valuable article recommendation
-   - Use default AI model for analysis
-
-2. Include personal interests for better recommendations:
-   ```bash
-   riffle -o feeds.opml -i interests.txt
-   ```
-   This will:
-   - Match articles against your interests
-   - Improve recommendation quality
-   - Show interest match scores
-   - Include AI analysis of top articles
-
-3. Get more recommendations with custom model:
-   ```bash
-   riffle -o feeds.opml -i interests.txt -t 3 -m "custom-model"
-   ```
-   This will:
-   - Show the top 3 most valuable articles
-   - Rank them by overall score
-   - Include detailed reasoning for each
-   - Use specified AI model for analysis
-
-4. Fetch more articles per feed:
-   ```bash
-   riffle -o feeds.opml -i interests.txt -n 5
-   ```
-   This will:
-   - Fetch up to 5 articles per feed (from last 2 days)
-   - Process more content for better selection
-   - Still respect the 2-day time window
-   - Include AI analysis of recommendations
-
-Note: Articles are always filtered to the last 2 days in your current time zone, regardless of how many articles you request with `-n`. This ensures you only see recent, relevant content.
-
-### Configuration Files
-
-#### OPML File Format (feeds.opml)
-The OPML file contains your RSS feed subscriptions, organized by category. Example structure:
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<opml version="1.0">
-    <head>
-        <title>Tech Feed Subscriptions</title>
-    </head>
-    <body>
-        <outline text="Programming">
-            <outline type="rss" 
-                    text="The Go Blog" 
-                    xmlUrl="https://go.dev/blog/feed.atom"/>
-        </outline>
-    </body>
-</opml>
+```
+GET /sources
 ```
 
-See `conf/feeds.opml` for a complete example with multiple feeds and categories.
+Query Parameters:
+- `limit`: Maximum number of sources to return (default: 50)
+- `nextToken`: Token for pagination
 
-#### Interests File Format (interests.txt)
-The interests file contains your topics of interest, one per line. You can:
-- Group interests with comments (lines starting with #)
-- Use multiple words per interest
-- Order by priority (all interests are weighted equally)
+#### Get Source
 
-Example structure:
 ```
-# Programming Languages
-golang programming
-rust development
-
-# Technologies
-cloud native
-distributed systems
+GET /sources/:id
 ```
 
-See `conf/interests.txt` for a complete example with various technology interests.
+#### Create Source
 
-### Scoring System
+```
+POST /sources
+```
 
-Articles are scored based on multiple factors with equal weighting:
+Request Body:
+```json
+{
+  "name": "Example Feed",
+  "url": "https://example.com/feed.xml",
+  "description": "An example RSS feed",
+  "category": "Technology"
+}
+```
 
-1. Content Quality (50%):
-   - Text length (40% of quality score)
-   - Keyword relevance (40% of quality score)
-   - Link quality (20% of quality score)
+#### Update Source
 
-2. Interest Match (50%):
-   - Relevance to your specified interests
-   - Matches are calculated using word-based analysis
-   - Multiple word interests are handled intelligently
+```
+PUT /sources/:id
+```
 
-The final score is a combination of both factors, helping you find articles that are both high-quality and relevant to your interests.
+Request Body:
+```json
+{
+  "name": "Updated Feed Name",
+  "description": "Updated description",
+  "category": "News"
+}
+```
+
+#### Delete Source
+
+```
+DELETE /sources/:id
+```
+
+#### Batch Create Sources
+
+```
+POST /sources/batch
+```
+
+Request Body:
+```json
+{
+  "sources": [
+    {
+      "name": "Feed 1",
+      "url": "https://example1.com/feed.xml",
+      "category": "Technology"
+    },
+    {
+      "name": "Feed 2",
+      "url": "https://example2.com/feed.xml",
+      "category": "News"
+    }
+  ]
+}
+```
+
+#### Batch Delete Sources
+
+```
+DELETE /sources/batch
+```
+
+Request Body:
+```json
+{
+  "sourceIds": ["source-id-1", "source-id-2"]
+}
+```
+
+### RSS Contents
+
+#### List Contents
+
+```
+GET /contents
+```
+
+Query Parameters:
+- `sourceId`: Filter by source ID
+- `startDate`: Filter by start date (RFC3339 format)
+- `endDate`: Filter by end date (RFC3339 format)
+- `limit`: Maximum number of contents to return (default: 50)
+- `nextToken`: Token for pagination
+
+#### Get Content
+
+```
+GET /contents/:id
+```
+
+#### Update Content
+
+```
+PUT /contents/:id
+```
+
+Request Body:
+```json
+{
+  "title": "Updated Title",
+  "description": "Updated description",
+  "content": "Updated content",
+  "categories": ["Technology", "Programming"]
+}
+```
+
+#### Delete Content
+
+```
+DELETE /contents/:id
+```
+
+#### Batch Delete Contents
+
+```
+DELETE /contents/batch
+```
+
+Request Body:
+```json
+{
+  "contentIds": ["content-id-1", "content-id-2"]
+}
+```
+
+#### Fetch Contents
+
+```
+POST /contents/fetch
+```
+
+Request Body:
+```json
+{
+  "sourceId": "source-id",  // Optional, if not provided, fetch all sources
+  "days": 7                 // Number of days to fetch
+}
+```
+
+#### Get Fetch Status
+
+```
+GET /contents/fetch/:jobId
+```
+
+#### Search Contents
+
+```
+GET /contents/search?keywords=golang,programming&sourceId=source-id&limit=10
+```
+
+Query Parameters:
+- `keywords`: Comma-separated list of keywords to search for
+- `sourceId`: Filter by source ID (optional)
+- `limit`: Maximum number of results to return (default: 50)
+
+### Recommendations
+
+#### Get Recommendations
+
+```
+GET /recommendations
+```
+
+Query Parameters:
+- `userId`: User ID to get recommendations for
+- `sourceIds`: Comma-separated list of source IDs to filter by
+- `limit`: Maximum number of recommendations to return (default: 10)
+
+#### Submit Feedback
+
+```
+POST /recommendations/feedback
+```
+
+Request Body:
+```json
+{
+  "contentId": "content-id",
+  "userId": "user-id",
+  "rating": 5,
+  "comment": "Great article!"
+}
+```
+
+#### Get User Feedback
+
+```
+GET /recommendations/feedback/:userId
+```
+
+### System
+
+#### Health Check
+
+```
+GET /health
+```
+
+#### System Info
+
+```
+GET /system/info
+```
+
+## Project Structure
+
+```
+riffle/
+├── cmd/
+│   └── riffle/
+│       ├── app/
+│       │   ├── root.go
+│       │   └── serve.go
+│       └── main.go
+├── pkg/
+│   ├── riffle/
+│   │   ├── analyzer.go
+│   │   ├── feed.go
+│   │   └── opml.go
+│   └── serving/
+│       ├── api/
+│       │   ├── handlers/
+│       │   │   ├── contents.go
+│       │   │   ├── factory.go
+│       │   │   ├── recommendations.go
+│       │   │   ├── sources.go
+│       │   │   └── system.go
+│       │   └── middleware/
+│       │       └── middleware.go
+│       ├── storage/
+│       │   ├── contents.go
+│       │   ├── recommendations.go
+│       │   ├── sources.go
+│       │   └── sqlite.go
+│       ├── options.go
+│       ├── routes.go
+│       └── server.go
+├── go.mod
+├── go.sum
+└── README.md
+```
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- [Gin Web Framework](https://github.com/gin-gonic/gin)
+- [SQLite](https://www.sqlite.org/index.html)
+- [Prometheus](https://prometheus.io/) 
