@@ -9,6 +9,8 @@ Riffle is a powerful RSS feed reader and aggregator with a REST API for managing
 - **Recommendations**: Get personalized content recommendations based on user feedback
 - **Search**: Search for content by keywords
 - **Batch Operations**: Perform batch operations on sources and content
+- **OPML Import**: Import RSS feeds from OPML files
+- **Content Analysis**: Analyze RSS content quality and relevance
 - **Metrics**: Prometheus metrics for monitoring
 - **Profiling**: Optional pprof endpoints for debugging
 
@@ -16,7 +18,7 @@ Riffle is a powerful RSS feed reader and aggregator with a REST API for managing
 
 ### Prerequisites
 
-- Go 1.21 or higher
+- Go 1.24 or higher
 - SQLite3
 
 ### Installation
@@ -28,19 +30,15 @@ git clone https://github.com/flyer103/riffle.git
 cd riffle
 ```
 
-2. Install dependencies:
+2. Build the application:
 
 ```bash
-go mod download
-```
-
-3. Build the application:
-
-```bash
-go build -o riffle cmd/riffle/main.go
+make build
 ```
 
 ### Usage
+
+Riffle provides several commands:
 
 #### Running the Server
 
@@ -48,8 +46,21 @@ go build -o riffle cmd/riffle/main.go
 ./riffle serve --port 8080 --db-path ./riffle.db
 ```
 
+#### Importing OPML Files
+
+```bash
+./riffle import-opml --opml feeds.opml --db-path ./riffle.db
+```
+
+#### Analyzing RSS Feeds
+
+```bash
+./riffle run --opml feeds.opml --interests interests.txt --articles 5 --top 10
+```
+
 #### Command-line Options
 
+##### Serve Command Options
 - `--port`: Port to listen on (default: 8080)
 - `--db-path`: Path to the SQLite database file (default: ./riffle.db)
 - `--log-level`: Log level (debug, info, warn, error) (default: info)
@@ -60,6 +71,17 @@ go build -o riffle cmd/riffle/main.go
 - `--cors-origins`: Allowed CORS origins (default: *)
 - `--read-timeout`: HTTP server read timeout (default: 30s)
 - `--write-timeout`: HTTP server write timeout (default: 30s)
+
+##### Import OPML Command Options
+- `--opml`, `-o`: Path to OPML file (required)
+- `--db-path`: Path to the SQLite database file (default: ./riffle.db)
+
+##### Run Command Options
+- `--opml`, `-o`: Path to OPML file (required)
+- `--interests`, `-i`: Path to file containing interests (one per line)
+- `--articles`, `-n`: Number of articles to fetch from each feed (default: 3)
+- `--top`, `-t`: Number of top articles to recommend (default: 1)
+- `--model`, `-m`: Perplexity API model to use for article analysis (default: r1-1776)
 
 ## API Documentation
 
@@ -291,50 +313,6 @@ GET /health
 GET /system/info
 ```
 
-## Project Structure
-
-```
-riffle/
-├── cmd/
-│   └── riffle/
-│       ├── app/
-│       │   ├── root.go
-│       │   └── serve.go
-│       └── main.go
-├── pkg/
-│   ├── riffle/
-│   │   ├── analyzer.go
-│   │   ├── feed.go
-│   │   └── opml.go
-│   └── serving/
-│       ├── api/
-│       │   ├── handlers/
-│       │   │   ├── contents.go
-│       │   │   ├── factory.go
-│       │   │   ├── recommendations.go
-│       │   │   ├── sources.go
-│       │   │   └── system.go
-│       │   └── middleware/
-│       │       └── middleware.go
-│       ├── storage/
-│       │   ├── contents.go
-│       │   ├── recommendations.go
-│       │   ├── sources.go
-│       │   └── sqlite.go
-│       ├── options.go
-│       ├── routes.go
-│       └── server.go
-├── go.mod
-├── go.sum
-└── README.md
-```
-
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- [Gin Web Framework](https://github.com/gin-gonic/gin)
-- [SQLite](https://www.sqlite.org/index.html)
-- [Prometheus](https://prometheus.io/) 
