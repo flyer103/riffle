@@ -1,12 +1,17 @@
 package handlers
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/flyer103/riffle/pkg/serving/storage"
 	"github.com/gin-gonic/gin"
+	"github.com/mmcdole/gofeed"
 )
 
 // ContentsHandler handles API requests for RSS contents
@@ -208,17 +213,143 @@ func (h *ContentsHandler) FetchContents(c *gin.Context) {
 	})
 
 	// Start the fetch process asynchronously
-	// In a real implementation, this would be handled by a background worker
-	// For now, we'll just update the job status to simulate the process
 	go func() {
-		// Simulate processing
-		time.Sleep(2 * time.Second)
+		var sources []storage.RSSSource
+		var err error
+		var itemsProcessed int
+		var errors []string
+
+		ctx := context.Background()
+
+		// Get sources to fetch
+		if req.SourceID != nil {
+			// Fetch for a specific source
+			source, err := h.db.GetSource(*req.SourceID)
+			if err != nil {
+				h.db.UpdateFetchJobStatus(job.ID, "failed", 0, fmt.Sprintf("Failed to get source: %v", err))
+				return
+			}
+			sources = []storage.RSSSource{*source}
+		} else {
+			// Fetch for all sources
+			sources, _, err = h.db.ListSources(0, "") // Get all sources
+			if err != nil {
+				h.db.UpdateFetchJobStatus(job.ID, "failed", 0, fmt.Sprintf("Failed to list sources: %v", err))
+				return
+			}
+		}
+
+		// Update job status to in-progress
+		err = h.db.UpdateFetchJobStatus(job.ID, "in-progress", 0, "")
+		if err != nil {
+			// Log the error but continue
+			log.Printf("Failed to update job status: %v", err)
+		}
+
+		// Calculate the cutoff time based on the requested days
+		cutoffTime := time.Now().AddDate(0, 0, -req.Days)
+
+		// Fetch content for each source
+		for _, source := range sources {
+			// Use the FetchLatestArticles function from the riffle package
+			// But modify it to respect the requested days parameter
+			fp := gofeed.NewParser()
+			feed, err := fp.ParseURLWithContext(source.URL, ctx)
+			if err != nil {
+				errors = append(errors, fmt.Sprintf("Failed to parse feed %s: %v", source.URL, err))
+				continue
+			}
+
+			// Process each item in the feed
+			for _, item := range feed.Items {
+				// Get the article's publication time
+				var pubDate time.Time
+				if item.PublishedParsed != nil {
+					pubDate = *item.PublishedParsed
+				} else if item.UpdatedParsed != nil {
+					pubDate = *item.UpdatedParsed
+				} else {
+					continue // Skip articles with no date
+				}
+
+				// Skip articles older than the cutoff time
+				if pubDate.Before(cutoffTime) {
+					continue
+				}
+
+				// Get the full content if available, otherwise use description
+				content := item.Content
+				if content == "" {
+					content = item.Description
+				}
+
+				// Get the article URL
+				url := item.Link
+				if url == "" {
+					url = item.GUID // fallback to GUID if link is not available
+				}
+
+				// Check if the content already exists in the database
+				existingContent, err := h.db.GetContentByURL(url)
+				if err == nil && existingContent != nil {
+					// Content already exists, skip it
+					continue
+				}
+
+				// Create a new content item
+				rssContent := &storage.RSSContent{
+					SourceID:    source.ID,
+					Title:       item.Title,
+					Link:        url,
+					Description: item.Description,
+					Content:     content,
+					PublishedAt: pubDate,
+					FetchedAt:   time.Now().UTC(),
+				}
+
+				// Add author if available
+				if item.Author != nil {
+					rssContent.Author = item.Author.Name
+				}
+
+				// Add categories if available
+				if len(item.Categories) > 0 {
+					rssContent.Categories = item.Categories
+				}
+
+				// Store the content in the database
+				err = h.db.CreateContent(rssContent)
+				if err != nil {
+					errors = append(errors, fmt.Sprintf("Failed to store content %s: %v", url, err))
+					continue
+				}
+
+				itemsProcessed++
+			}
+
+			// Update the source's last fetched time
+			err = h.db.UpdateSourceLastFetchedAt(source.ID, time.Now().UTC())
+			if err != nil {
+				errors = append(errors, fmt.Sprintf("Failed to update source last fetched time %s: %v", source.ID, err))
+			}
+		}
 
 		// Update job status to completed
-		err := h.db.UpdateFetchJobStatus(job.ID, "completed", 10, "")
+		status := "completed"
+		if len(errors) > 0 {
+			status = "completed_with_errors"
+		}
+
+		errorMsg := ""
+		if len(errors) > 0 {
+			errorMsg = strings.Join(errors, "; ")
+		}
+
+		err = h.db.UpdateFetchJobStatus(job.ID, status, itemsProcessed, errorMsg)
 		if err != nil {
 			// Log the error but don't return it to the client
 			// since this is an asynchronous operation
+			log.Printf("Failed to update job status: %v", err)
 		}
 	}()
 }
