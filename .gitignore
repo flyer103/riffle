@@ -5,5 +5,5 @@
 /.dockerfile-*
 /.licenses*
 /.buildx-initialized
-riffle
+/riffle
 *.db
