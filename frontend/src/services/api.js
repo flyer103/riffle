@@ -54,12 +54,12 @@ export default {
 
   // Fetch new content
   fetchContents() {
-    return apiClient.post('/contents/fetch', { days: 7 })
+    return apiClient.post('/contents/fetch', { days: 30 })
   },
   fetchContentForSource(sourceId) {
     return apiClient.post('/contents/fetch', { 
       sourceId, 
-      days: 7 
+      days: 30 
     })
   }
 } 
